@@ -64,7 +64,7 @@ function RouteComponent() {
 	const statPct = (v: number) => Math.min(100, Math.round((v / 255) * 100));
 
 	return (
-		<div className="max-w-4xl mx-auto p-6">
+		<div className="mx-auto max-w-4xl px-6 pt-12">
 			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg overflow-hidden">
 				<div className="flex flex-col md:flex-row items-center gap-6 p-6">
 					{/* Artwork */}
