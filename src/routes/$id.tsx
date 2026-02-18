@@ -55,10 +55,10 @@ function RouteComponent() {
 
 	return (
 		<div className="max-w-4xl mx-auto p-6">
-			<div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg overflow-hidden">
+			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg overflow-hidden">
 				<div className="flex flex-col md:flex-row items-center gap-6 p-6">
 					{/* Artwork */}
-					<div className="w-48 h-48 flex-shrink-0 flex items-center justify-center bg-white/60 rounded-xl shadow-inner">
+					<div className="w-48 h-48 shrink-0 flex items-center justify-center bg-white/60 rounded-xl shadow-inner">
 						{artwork ? (
 							<img
 								src={artwork}
@@ -145,7 +145,7 @@ function RouteComponent() {
 								<div className="flex-1">
 									<div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
 										<div
-											className="h-full bg-gradient-to-r from-green-400 to-lime-400"
+											className="h-full bg-linear-to-r from-green-400 to-lime-400"
 											style={{ width: `${statPct(s.base_stat)}%` }}
 										/>
 									</div>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-	ColumnDef,
+	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
 	},
 	errorComponent: ({ error }) => (
 		<div className="mx-auto max-w-4xl px-6 py-16 text-center">
-			<div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg p-8">
+			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg p-8">
 				<h1 className="text-3xl font-semibold">Error</h1>
 				<p className="mt-4 text-slate-600">
 					{(error as Error)?.message || "Something went wrong."}
@@ -77,108 +77,103 @@ function App() {
 	});
 
 	return (
-		<div className="min-h-screen">
-			<main className="mx-auto max-w-4xl px-6 py-12">
-				<div className="bg-gradient-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg overflow-hidden">
-					<div className="p-6 flex items-center justify-between">
-						<div>
-							<h1 className="text-3xl font-extrabold tracking-tight">
-								Pokédex
-							</h1>
-							<p className="mt-1 text-sm text-gray-600">
-								Browse Pokémon (sample list)
-							</p>
-						</div>
-						{/* Placeholder for a global action */}
-						<button
-							className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
-							type="button"
-						>
-							Refresh
-						</button>
+		<main className="mx-auto max-w-4xl px-6 pt-12">
+			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg overflow-hidden">
+				<div className="p-6 flex items-center justify-between">
+					<div>
+						<h1 className="text-3xl font-extrabold tracking-tight">Pokédex</h1>
+						<p className="mt-1 text-sm text-gray-600">
+							Browse Pokémon (sample list)
+						</p>
 					</div>
+					{/* Placeholder for a global action */}
+					<button
+						className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
+						type="button"
+					>
+						Refresh
+					</button>
+				</div>
 
-					<div className="p-6 border-t bg-white/30">
-						<section className="mt-2 overflow-hidden">
-							<div className="overflow-x-auto">
-								<table className="min-w-full text-left text-sm">
-									<thead className="text-xs font-semibold uppercase tracking-[0.12em]">
-										{table.getHeaderGroups().map((headerGroup) => (
-											<tr
-												key={headerGroup.id}
-												className="border-b border-slate-800"
+				<div className="p-6 border-t bg-white/30">
+					<section className="mt-2 overflow-y-auto max-h-120">
+						<div className="overflow-x-auto">
+							<table className="min-w-full text-left text-sm">
+								<thead className="text-xs font-semibold uppercase tracking-[0.12em]">
+									{table.getHeaderGroups().map((headerGroup) => (
+										<tr
+											key={headerGroup.id}
+											className="border-b border-slate-800"
+										>
+											{headerGroup.headers.map((header) => (
+												<th key={header.id} className="px-6 py-3">
+													{header.isPlaceholder
+														? null
+														: flexRender(
+																header.column.columnDef.header,
+																header.getContext(),
+															)}
+												</th>
+											))}
+										</tr>
+									))}
+								</thead>
+								<tbody className="divide-y divide-slate-800">
+									{table.getRowModel().rows.length === 0 ? (
+										<tr>
+											<td
+												colSpan={table.getAllColumns().length}
+												className="px-6 py-12 text-center text-sm"
 											>
-												{headerGroup.headers.map((header) => (
-													<th key={header.id} className="px-6 py-3">
-														{header.isPlaceholder
-															? null
-															: flexRender(
-																	header.column.columnDef.header,
-																	header.getContext(),
-																)}
-													</th>
-												))}
-											</tr>
-										))}
-									</thead>
-									<tbody className="divide-y divide-slate-800">
-										{table.getRowModel().rows.length === 0 ? (
-											<tr>
-												<td
-													colSpan={table.getAllColumns().length}
-													className="px-6 py-12 text-center text-sm"
+												No data
+											</td>
+										</tr>
+									) : (
+										table.getRowModel().rows.map((row) => {
+											const href = `/${row.original.name}`;
+											return (
+												<tr
+													key={row.id}
+													className="transition-colors hover:bg-slate-900/60"
 												>
-													No data
-												</td>
-											</tr>
-										) : (
-											table.getRowModel().rows.map((row) => {
-												const href = `/${row.original.name}`;
-												return (
-													<tr
-														key={row.id}
-														className="transition-colors hover:bg-slate-900/60"
-													>
-														{row.getVisibleCells().map((cell) => {
-															const isActionsCell =
-																cell.column.id === "actions";
+													{row.getVisibleCells().map((cell) => {
+														const isActionsCell = cell.column.id === "actions";
 
-															return (
-																<td
-																	key={cell.id}
-																	className="px-6 py-4 align-middle"
-																>
-																	{isActionsCell ? (
-																		flexRender(
+														return (
+															<td
+																key={cell.id}
+																className="px-6 py-4 align-middle"
+															>
+																{isActionsCell ? (
+																	flexRender(
+																		cell.column.columnDef.cell,
+																		cell.getContext(),
+																	)
+																) : (
+																	<Link
+																		to={href}
+																		className="block w-full h-full cursor-pointer"
+																	>
+																		{flexRender(
 																			cell.column.columnDef.cell,
 																			cell.getContext(),
-																		)
-																	) : (
-																		<Link
-																			to={href}
-																			className="block w-full h-full cursor-pointer"
-																		>
-																			{flexRender(
-																				cell.column.columnDef.cell,
-																				cell.getContext(),
-																			)}
-																		</Link>
-																	)}
-																</td>
-															);
-														})}
-													</tr>
-												);
-											})
-										)}
-									</tbody>
-								</table>
-							</div>
-						</section>
-					</div>
+																		)}
+																	</Link>
+																)}
+															</td>
+														);
+													})}
+												</tr>
+											);
+										})
+									)}
+								</tbody>
+							</table>
+						</div>
+					</section>
 				</div>
-			</main>
-		</div>
+			</div>
+		</main>
 	);
 }
 
