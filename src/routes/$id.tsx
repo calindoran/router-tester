@@ -1,12 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { PokemonDto } from "../api/pokemon";
+import { getPokemonQuery } from "../api/pokemon";
 
 export const Route = createFileRoute("/$id")({
-	loader: async ({ params }) => {
-		return fetch(`https://pokeapi.co/api/v2/pokemon/${params.id}`)
-			.then((res) => res.json())
-			.then((data) => data as PokemonDto);
-	},
 	errorComponent: ({ error }) => (
 		<div className="mx-auto max-w-4xl px-6 py-16 text-center">
 			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg p-8">
@@ -21,7 +17,10 @@ export const Route = createFileRoute("/$id")({
 });
 
 function RouteComponent() {
-	const data = Route.useLoaderData();
+	const params = Route.useParams();
+	const { data } = useQuery(getPokemonQuery(params.id));
+	console.log("data", data);
+
 	if (!data) return <div className="p-6">Loading...</div>;
 
 	const {

@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
 	type ColumnDef,
@@ -6,15 +7,10 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
-import type { PokemonRefDto } from "../api/pokemon";
+import { getAllPokemonQuery, type PokemonRefDto } from "../api/pokemon";
 
 export const Route = createFileRoute("/")({
 	validateSearch: () => {},
-	loader: async () => {
-		return fetch("https://pokeapi.co/api/v2/pokemon?limit=20&offset=20")
-			.then((res) => res.json())
-			.then((data) => data.results as PokemonRefDto[]);
-	},
 	errorComponent: ({ error }) => (
 		<div className="mx-auto max-w-4xl px-6 py-16 text-center">
 			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg p-8">
@@ -29,7 +25,8 @@ export const Route = createFileRoute("/")({
 });
 
 function App() {
-	const data = Route.useLoaderData();
+	const { data } = useQuery(getAllPokemonQuery(20, 20)) || [];
+	console.log("data", data);
 
 	const columns: ColumnDef<PokemonRefDto>[] = React.useMemo(
 		() => [
@@ -71,7 +68,7 @@ function App() {
 	);
 
 	const table = useReactTable({
-		data,
+		data: data || [],
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 	});
