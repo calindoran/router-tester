@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+	ColumnDef,
 	flexRender,
 	getCoreRowModel,
 	useReactTable,
@@ -30,33 +31,40 @@ export const Route = createFileRoute("/")({
 function App() {
 	const data = Route.useLoaderData();
 
-	const columns = React.useMemo(
+	const columns: ColumnDef<PokemonRefDto>[] = React.useMemo(
 		() => [
 			{
 				accessorKey: "name",
 				header: "Name",
-				cell: (row: any) => (
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center text-sm font-semibold text-slate-700">
-							{String(row.getValue()).charAt(0).toUpperCase()}
+				cell: (row) => {
+					if (!row.getValue()) return null;
+					return (
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center text-sm font-semibold text-slate-700">
+								{String(row.getValue()).charAt(0).toUpperCase()}
+							</div>
+							<div className="text-sm font-medium">
+								{String(row.getValue()).toUpperCase()}
+							</div>
 						</div>
-						<div className="text-sm font-medium">
-							{row.getValue().toUpperCase()}
-						</div>
-					</div>
-				),
+					);
+				},
 			},
 			{
+				id: "actions",
 				accessorKey: "name",
 				header: "Actions",
-				cell: (row: any) => (
-					<a
-						href={`/${row.getValue()}`}
-						className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
-					>
-						View Details
-					</a>
-				),
+				cell: (row) => {
+					const href = `/${row.getValue()}`;
+					return (
+						<Link
+							to={href}
+							className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
+						>
+							View Details
+						</Link>
+					);
+				},
 			},
 		],
 		[],
@@ -131,19 +139,34 @@ function App() {
 														key={row.id}
 														className="transition-colors hover:bg-slate-900/60"
 													>
-														{row.getVisibleCells().map((cell) => (
-															<td
-																key={cell.id}
-																className="px-6 py-4 align-middle"
-															>
-																<a href={href} className="block w-full h-full">
-																	{flexRender(
-																		cell.column.columnDef.cell,
-																		cell.getContext(),
+														{row.getVisibleCells().map((cell) => {
+															const isActionsCell =
+																cell.column.id === "actions";
+
+															return (
+																<td
+																	key={cell.id}
+																	className="px-6 py-4 align-middle"
+																>
+																	{isActionsCell ? (
+																		flexRender(
+																			cell.column.columnDef.cell,
+																			cell.getContext(),
+																		)
+																	) : (
+																		<Link
+																			to={href}
+																			className="block w-full h-full cursor-pointer"
+																		>
+																			{flexRender(
+																				cell.column.columnDef.cell,
+																				cell.getContext(),
+																			)}
+																		</Link>
 																	)}
-																</a>
-															</td>
-														))}
+																</td>
+															);
+														})}
 													</tr>
 												);
 											})

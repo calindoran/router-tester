@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import type { PokemonDto } from "../api/pokemon";
 
 export const Route = createFileRoute("/$id")({
@@ -88,12 +88,12 @@ function RouteComponent() {
 									</span>
 								</div>
 							</div>
-							<a
-								href="/"
+							<Link
+								to={".."}
 								className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
 							>
 								Back
-							</a>
+							</Link>
 						</div>
 
 						{/* Types */}
