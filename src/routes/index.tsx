@@ -7,26 +7,23 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
+import ErrorNotification from "@/components/ErrorNotification";
+import Loading from "@/components/Loading";
 import { getAllPokemonQuery, type PokemonRefDto } from "../api/pokemon";
 
 export const Route = createFileRoute("/")({
 	validateSearch: () => {},
-	errorComponent: ({ error }) => (
-		<div className="mx-auto max-w-4xl px-6 py-16 text-center">
-			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg p-8">
-				<h1 className="text-3xl font-semibold">Error</h1>
-				<p className="mt-4 text-slate-600">
-					{(error as Error)?.message || "Something went wrong."}
-				</p>
-			</div>
-		</div>
-	),
+	errorComponent: ({ error }) => <ErrorNotification error={error} />,
 	component: App,
 });
 
 function App() {
-	const { data } = useQuery(getAllPokemonQuery(20, 20)) || [];
-	console.log("data", data);
+	const [pageIndex, setPageIndex] = React.useState(0);
+	const [pageSize, setPageSize] = React.useState(20);
+
+	const { data, isLoading, refetch, isFetching } = useQuery(
+		getAllPokemonQuery(pageSize, pageIndex * pageSize),
+	);
 
 	const columns: ColumnDef<PokemonRefDto>[] = React.useMemo(
 		() => [
@@ -68,10 +65,13 @@ function App() {
 	);
 
 	const table = useReactTable({
-		data: data || [],
+		data: data?.results ?? [],
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 	});
+
+	if (isLoading) return <Loading />;
+	if (!data) return <ErrorNotification error={new Error("No data found")} />;
 
 	return (
 		<main className="mx-auto max-w-4xl px-6 pt-12">
@@ -84,7 +84,10 @@ function App() {
 						</p>
 					</div>
 					{/* Placeholder for a global action */}
+					{/* Search box for filtering Pokémon */}
+
 					<button
+						onClick={() => refetch()}
 						className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
 						type="button"
 					>
@@ -168,6 +171,49 @@ function App() {
 							</table>
 						</div>
 					</section>
+					<div className="flex items-center justify-between gap-4 mt-4">
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+								disabled={pageIndex === 0}
+								className="px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm disabled:opacity-50"
+							>
+								Previous
+							</button>
+							<button
+								type="button"
+								onClick={() => setPageIndex((p) => p + 1)}
+								disabled={pageIndex + 1 >= Math.ceil(data.count / pageSize)}
+								className="px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm disabled:opacity-50"
+							>
+								Next
+							</button>
+							<span className="text-sm text-gray-600 ml-3">
+								Page {pageIndex + 1} of {Math.ceil(data.count / pageSize)}
+								{isFetching ? " (loading...)" : ""}
+							</span>
+						</div>
+
+						<div className="flex items-center gap-2">
+							<label className="text-sm text-gray-600" htmlFor="rows-per-page">
+								Rows:
+							</label>
+							<select
+								id="rows-per-page"
+								value={pageSize}
+								onChange={(e) => {
+									setPageSize(Number(e.target.value));
+									setPageIndex(0);
+								}}
+								className="px-2 py-1 rounded"
+							>
+								<option value={10}>10</option>
+								<option value={20}>20</option>
+								<option value={50}>50</option>
+							</select>
+						</div>
+					</div>
 				</div>
 			</div>
 		</main>

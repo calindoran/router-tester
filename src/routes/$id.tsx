@@ -1,27 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import ErrorNotification from "@/components/ErrorNotification";
+import Loading from "@/components/Loading";
 import { getPokemonQuery } from "../api/pokemon";
 
 export const Route = createFileRoute("/$id")({
-	errorComponent: ({ error }) => (
-		<div className="mx-auto max-w-4xl px-6 py-16 text-center">
-			<div className="bg-linear-to-br from-indigo-50 to-pink-50 rounded-2xl shadow-lg p-8">
-				<h1 className="text-3xl font-semibold">Error</h1>
-				<p className="mt-4 text-slate-600">
-					{(error as Error)?.message || "Something went wrong."}
-				</p>
-			</div>
-		</div>
-	),
+	errorComponent: ({ error }) => <ErrorNotification error={error} />,
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const params = Route.useParams();
-	const { data } = useQuery(getPokemonQuery(params.id));
-	console.log("data", data);
+	const { data, isLoading } = useQuery(getPokemonQuery(params.id));
 
-	if (!data) return <div className="p-6">Loading...</div>;
+	if (isLoading) return <Loading />;
+	if (!data) return <ErrorNotification error={new Error("No data found")} />;
 
 	const {
 		id,
