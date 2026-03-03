@@ -7,6 +7,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import React from "react";
+import { useDebounceCallback } from "usehooks-ts";
 import ErrorNotification from "@/components/ErrorNotification";
 import Loading from "@/components/Loading";
 import { getAllPokemonQuery, type PokemonRefDto } from "../api/pokemon";
@@ -20,10 +21,19 @@ export const Route = createFileRoute("/")({
 function App() {
 	const [pageIndex, setPageIndex] = React.useState(0);
 	const [pageSize, setPageSize] = React.useState(20);
+	const [filter, setFilter] = React.useState("");
+	const debounced = useDebounceCallback(setFilter, 500);
 
 	const { data, isLoading, refetch, isFetching } = useQuery(
 		getAllPokemonQuery(pageSize, pageIndex * pageSize),
 	);
+
+	const filteredResults = React.useMemo(() => {
+		if (!filter) return data?.results ?? [];
+		return (data?.results ?? []).filter((p) =>
+			p.name.toLowerCase().includes(filter.toLowerCase()),
+		);
+	}, [data, filter]);
 
 	const columns: ColumnDef<PokemonRefDto>[] = React.useMemo(
 		() => [
@@ -65,7 +75,7 @@ function App() {
 	);
 
 	const table = useReactTable({
-		data: data?.results ?? [],
+		data: filteredResults,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 	});
@@ -84,15 +94,23 @@ function App() {
 						</p>
 					</div>
 					{/* Placeholder for a global action */}
-					{/* Search box for filtering Pokémon */}
-
-					<button
-						onClick={() => refetch()}
-						className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
-						type="button"
-					>
-						Refresh
-					</button>
+					<div className="flex items-center gap-3">
+						<input
+							type="search"
+							placeholder="Search Pokémon"
+							defaultValue={filter}
+							onChange={(e) => debounced(e.target.value)}
+							className="w-64 text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition"
+							aria-label="Search Pokémon"
+						/>
+						<button
+							onClick={() => refetch()}
+							className="text-sm px-3 py-1 bg-white/70 hover:bg-white rounded-full shadow-sm"
+							type="button"
+						>
+							Refresh
+						</button>
+					</div>
 				</div>
 
 				<div className="p-6 border-t bg-white/30">
