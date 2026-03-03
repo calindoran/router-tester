@@ -3,12 +3,12 @@ async function getAllPokemon(limit: number, offset: number) {
 		`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`,
 	)
 		.then((res) => res.json())
-		.then((data) => data.results as PokemonRefDto[]);
+		.then((data) => data as PokemonListResponse);
 	return response;
 }
 
 export const getAllPokemonQuery = (limit: number, offset: number) => ({
-	queryKey: [limit, offset],
+	queryKey: ["pokemon", limit, offset],
 	queryFn: () => getAllPokemon(limit, offset),
 });
 
@@ -23,6 +23,13 @@ export const getPokemonQuery = (name: string) => ({
 	queryKey: [name],
 	queryFn: () => getPokemon(name),
 });
+
+export interface PokemonListResponse {
+	count: number;
+	next: string | null;
+	previous: string | null;
+	results: PokemonRefDto[];
+}
 
 export interface PokemonRefDto {
 	name: string;
