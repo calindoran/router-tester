@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IdRouteImport } from './routes/$id'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GenerationsIndexRouteImport } from './routes/generations/index'
+import { Route as GenerationsGenerationIdRouteImport } from './routes/generations/$generationId'
 
 const IdRoute = IdRouteImport.update({
   id: '/$id',
@@ -22,31 +24,49 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GenerationsIndexRoute = GenerationsIndexRouteImport.update({
+  id: '/generations/',
+  path: '/generations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GenerationsGenerationIdRoute = GenerationsGenerationIdRouteImport.update({
+  id: '/generations/$generationId',
+  path: '/generations/$generationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$id': typeof IdRoute
+  '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/generations/': typeof GenerationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$id': typeof IdRoute
+  '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/generations': typeof GenerationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$id': typeof IdRoute
+  '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/generations/': typeof GenerationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$id'
+  fullPaths: '/' | '/$id' | '/generations/$generationId' | '/generations/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$id'
-  id: '__root__' | '/' | '/$id'
+  to: '/' | '/$id' | '/generations/$generationId' | '/generations'
+  id: '__root__' | '/' | '/$id' | '/generations/$generationId' | '/generations/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   IdRoute: typeof IdRoute
+  GenerationsGenerationIdRoute: typeof GenerationsGenerationIdRoute
+  GenerationsIndexRoute: typeof GenerationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +85,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/generations/': {
+      id: '/generations/'
+      path: '/generations'
+      fullPath: '/generations/'
+      preLoaderRoute: typeof GenerationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/generations/$generationId': {
+      id: '/generations/$generationId'
+      path: '/generations/$generationId'
+      fullPath: '/generations/$generationId'
+      preLoaderRoute: typeof GenerationsGenerationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   IdRoute: IdRoute,
+  GenerationsGenerationIdRoute: GenerationsGenerationIdRoute,
+  GenerationsIndexRoute: GenerationsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

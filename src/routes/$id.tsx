@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import ErrorNotification from "@/components/ErrorNotification";
 import Loading from "@/components/Loading";
 import { getPokemonQuery } from "../api/pokemon";

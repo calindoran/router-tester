@@ -24,6 +24,80 @@ export const getPokemonQuery = (name: string) => ({
 	queryFn: () => getPokemon(name),
 });
 
+async function getGeneration() {
+	const response = fetch(`https://pokeapi.co/api/v2/generation/`)
+		.then((res) => res.json())
+		.then((data) => data as GenerationListResponse);
+	return response;
+}
+
+export const getGenerationQuery = () => ({
+	queryKey: ["generation"],
+	queryFn: () => getGeneration(),
+});
+
+async function getGenerationDetails(id: string) {
+	const response = fetch(`https://pokeapi.co/api/v2/generation/${id}`)
+		.then((res) => res.json())
+		.then((data) => data as GenerationDto);
+	return response;
+}
+
+export const getGenerationDetailsQuery = (id: string) => ({
+	queryKey: ["generation", id],
+	queryFn: () => getGenerationDetails(id),
+});
+
+export interface GenerationListResponse {
+	count: number;
+	next: string | null;
+	previous: string | null;
+	results: GenerationDto[];
+}
+
+export interface GenerationDto {
+	id: number;
+	name: string;
+	abilities: [];
+	main_region: {
+		name: string;
+		url: string;
+	};
+	moves: [
+		{
+			name: string;
+			url: string;
+		},
+	];
+	names: [
+		{
+			name: string;
+			language: {
+				name: string;
+				url: string;
+			};
+		},
+	];
+	pokemon_species: [
+		{
+			name: string;
+			url: string;
+		},
+	];
+	types: [
+		{
+			name: string;
+			url: string;
+		},
+	];
+	version_groups: [
+		{
+			name: string;
+			url: string;
+		},
+	];
+}
+
 export interface PokemonListResponse {
 	count: number;
 	next: string | null;
