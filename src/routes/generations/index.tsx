@@ -1,16 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getGenerationQuery } from "@/api/pokemon";
 
 export const Route = createFileRoute("/generations/")({
+	loader: (options) =>
+		options.context.queryClient.ensureQueryData(getGenerationQuery()),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
-	const { data, isLoading } = useQuery(getGenerationQuery());
-
-	if (isLoading) return <div>Loading...</div>;
-	if (!data) return <div>Error loading generation data</div>;
+	const { data } = useSuspenseQuery(getGenerationQuery());
 
 	return (
 		<div className="mx-auto max-w-4xl px-6 pt-12">

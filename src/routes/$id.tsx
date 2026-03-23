@@ -1,20 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import ErrorNotification from "@/components/ErrorNotification";
-import Loading from "@/components/Loading";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPokemonQuery } from "../api/pokemon";
 
 export const Route = createFileRoute("/$id")({
-	errorComponent: ({ error }) => <ErrorNotification error={error} />,
+	loader: (options) =>
+		options.context.queryClient.ensureQueryData(
+			getPokemonQuery(options.params.id),
+		),
 	component: RouteComponent,
 });
 
 function RouteComponent() {
 	const params = Route.useParams();
-	const { data, isLoading } = useQuery(getPokemonQuery(params.id));
-
-	if (isLoading) return <Loading />;
-	if (!data) return <ErrorNotification error={new Error("No data found")} />;
+	const { data } = useSuspenseQuery(getPokemonQuery(params.id));
 
 	const {
 		id,

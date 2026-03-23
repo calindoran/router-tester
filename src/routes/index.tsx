@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
 	type ColumnDef,
@@ -9,12 +9,11 @@ import {
 import React from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import ErrorNotification from "@/components/ErrorNotification";
-import Loading from "@/components/Loading";
 import { getAllPokemonQuery, type PokemonRefDto } from "../api/pokemon";
 
 export const Route = createFileRoute("/")({
-	validateSearch: () => {},
-	errorComponent: ({ error }) => <ErrorNotification error={error} />,
+	loader: (options) =>
+		options.context.queryClient.ensureQueryData(getAllPokemonQuery(20, 0)),
 	component: App,
 });
 
@@ -24,7 +23,7 @@ function App() {
 	const [filter, setFilter] = React.useState("");
 	const debounced = useDebounceCallback(setFilter, 500);
 
-	const { data, isLoading, refetch, isFetching } = useQuery(
+	const { data, refetch, isFetching } = useSuspenseQuery(
 		getAllPokemonQuery(pageSize, pageIndex * pageSize),
 	);
 
@@ -80,7 +79,6 @@ function App() {
 		getCoreRowModel: getCoreRowModel(),
 	});
 
-	if (isLoading) return <Loading />;
 	if (!data) return <ErrorNotification error={new Error("No data found")} />;
 
 	return (
