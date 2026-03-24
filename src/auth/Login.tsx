@@ -1,7 +1,6 @@
 import { useAuth } from "@/auth/AuthProvider";
 import { sleep } from "@/utils/sleep";
 import { useForm, type AnyFieldApi } from "@tanstack/react-form";
-import { useRouterState } from "@tanstack/react-router";
 import * as React from "react";
 
 export function FieldInfo({ field }: { field: AnyFieldApi }) {
@@ -17,10 +16,9 @@ export function FieldInfo({ field }: { field: AnyFieldApi }) {
 
 export const Login = () => {
   const auth = useAuth();
-  const isLoading = useRouterState({ select: (s) => s.isLoading });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const isLoggingIn = isLoading || isSubmitting;
+  const isLoggingIn = isSubmitting;
 
   const form = useForm({
     defaultValues: {
@@ -45,7 +43,7 @@ export const Login = () => {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-gradient-to-b sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-linear-to-b sm:px-6 lg:px-8">
       <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl">
         <div className="p-6">
           <h3 className="text-xl">Login</h3>
@@ -57,7 +55,7 @@ export const Login = () => {
               form.handleSubmit();
             }}
           >
-            <div className="grid min-w-[300px] items-center gap-2">
+            <div className="grid min-w-75 items-center gap-2">
               <label htmlFor="username-input" className="text-sm font-medium">
                 Username
               </label>

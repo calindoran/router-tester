@@ -8,10 +8,10 @@ import ErrorNotification from "@/components/ErrorNotification";
 
 export const Route = createFileRoute("/dashboard/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getAllPokemonQuery(20, 0)),
-  component: App,
+  component: DashboardComponent,
 });
 
-function App() {
+function DashboardComponent() {
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(20);
   const [filter, setFilter] = React.useState("");
@@ -204,4 +204,4 @@ function App() {
   );
 }
 
-export default App;
+export default DashboardComponent;

@@ -4,10 +4,10 @@ import { getGenerationQuery } from "@/api/pokemon";
 
 export const Route = createFileRoute("/generations/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getGenerationQuery()),
-  component: RouteComponent,
+  component: GenerationsComponent,
 });
 
-function RouteComponent() {
+function GenerationsComponent() {
   const { data } = useSuspenseQuery(getGenerationQuery());
 
   return (
