@@ -9,22 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as IdRouteImport } from './routes/$id'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GenerationsIndexRouteImport } from './routes/generations/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as GenerationsGenerationIdRouteImport } from './routes/generations/$generationId'
+import { Route as DashboardIdRouteImport } from './routes/dashboard/$id'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IdRoute = IdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -35,77 +25,78 @@ const GenerationsIndexRoute = GenerationsIndexRouteImport.update({
   path: '/generations/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GenerationsGenerationIdRoute = GenerationsGenerationIdRouteImport.update({
   id: '/generations/$generationId',
   path: '/generations/$generationId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIdRoute = DashboardIdRouteImport.update({
+  id: '/dashboard/$id',
+  path: '/dashboard/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$id': typeof IdRoute
-  '/login': typeof LoginRoute
+  '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/generations/': typeof GenerationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$id': typeof IdRoute
-  '/login': typeof LoginRoute
+  '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/generations': typeof GenerationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/$id': typeof IdRoute
-  '/login': typeof LoginRoute
+  '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/generations/': typeof GenerationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/$id'
-    | '/login'
+    | '/dashboard/$id'
     | '/generations/$generationId'
+    | '/dashboard/'
     | '/generations/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$id' | '/login' | '/generations/$generationId' | '/generations'
+  to:
+    | '/'
+    | '/dashboard/$id'
+    | '/generations/$generationId'
+    | '/dashboard'
+    | '/generations'
   id:
     | '__root__'
     | '/'
-    | '/$id'
-    | '/login'
+    | '/dashboard/$id'
     | '/generations/$generationId'
+    | '/dashboard/'
     | '/generations/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  IdRoute: typeof IdRoute
-  LoginRoute: typeof LoginRoute
+  DashboardIdRoute: typeof DashboardIdRoute
   GenerationsGenerationIdRoute: typeof GenerationsGenerationIdRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
   GenerationsIndexRoute: typeof GenerationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$id': {
-      id: '/$id'
-      path: '/$id'
-      fullPath: '/$id'
-      preLoaderRoute: typeof IdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -120,6 +111,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenerationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/generations/$generationId': {
       id: '/generations/$generationId'
       path: '/generations/$generationId'
@@ -127,14 +125,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenerationsGenerationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/$id': {
+      id: '/dashboard/$id'
+      path: '/dashboard/$id'
+      fullPath: '/dashboard/$id'
+      preLoaderRoute: typeof DashboardIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  IdRoute: IdRoute,
-  LoginRoute: LoginRoute,
+  DashboardIdRoute: DashboardIdRoute,
   GenerationsGenerationIdRoute: GenerationsGenerationIdRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
   GenerationsIndexRoute: GenerationsIndexRoute,
 }
 export const routeTree = rootRouteImport

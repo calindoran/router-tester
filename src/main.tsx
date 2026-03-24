@@ -1,61 +1,53 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-	createRouter,
-	ErrorComponent,
-	RouterProvider,
-} from "@tanstack/react-router";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
-import { Spinner } from "./components/Spinner";
 import { routeTree } from "./routeTree.gen";
-import { auth } from "./utils/auth";
+import "./styles.css";
+import reportWebVitals from "./reportWebVitals";
+import { AuthProvider, useAuth } from "./auth/AuthProvider";
 
 export const queryClient = new QueryClient();
 
 const router = createRouter({
-	routeTree,
-	defaultPendingComponent: () => (
-		<div className="pointer-events-none fixed top-20 left-2">
-			<Spinner />
-		</div>
-	),
-	defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
-	context: {
-		auth: undefined!, // We'll inject this when we render
-		queryClient,
-	},
-	defaultPreload: "intent",
-	// Since we're using React Query, we don't want loader calls to ever be stale
-	// This will ensure that the loader is always called when the route is preloaded or visited
-	defaultPreloadStaleTime: 0,
-	scrollRestoration: true,
+  routeTree,
+  context: {
+    auth: undefined!, // We'll inject this when we render
+    queryClient,
+  },
+  defaultPreload: "intent",
+  // Since we're using React Query, we don't want loader calls to ever be stale
+  // This will ensure that the loader is always called when the route is preloaded or visited
+  defaultPreloadStaleTime: 0,
+  scrollRestoration: true,
 });
 
 declare module "@tanstack/react-router" {
-	interface Register {
-		router: typeof router;
-	}
+  interface Register {
+    router: typeof router;
+  }
 }
 
 function App() {
-	return (
-		<RouterProvider
-			router={router}
-			defaultPreload="intent"
-			context={{
-				auth,
-			}}
-		/>
-	);
+  const auth = useAuth();
+  return <RouterProvider router={router} context={{ auth }} />;
 }
 
-const rootElement = document.getElementById("app")!;
-if (!rootElement.innerHTML) {
-	const root = ReactDOM.createRoot(rootElement);
-	root.render(
-		// <React.StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<App />
-		</QueryClientProvider>,
-		// </React.StrictMode>
-	);
+const rootElement = document.getElementById("app");
+if (rootElement && !rootElement.innerHTML) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <StrictMode>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </AuthProvider>
+    </StrictMode>,
+  );
 }
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
