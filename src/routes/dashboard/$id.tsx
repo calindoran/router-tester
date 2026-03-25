@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPokemonQuery } from "@/api/pokemon";
@@ -14,11 +15,15 @@ export const Route = createFileRoute("/dashboard/$id")({
 function RouteComponent() {
   const params = Route.useParams();
   const { data } = useSuspenseQuery(getPokemonQuery(params.id));
+  const [showShiny, setShowShiny] = React.useState(false);
 
   const { id, name, sprites, types = [], abilities = [], stats = [], height, weight } = data;
 
   const displayName = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   const artwork = sprites?.other?.["official-artwork"]?.front_default || sprites?.front_default;
+  const shinyArtwork =
+    sprites?.other?.["official-artwork"]?.front_shiny || sprites?.front_shiny || null;
+  const hasFlipArtwork = Boolean(artwork && shinyArtwork);
 
   const typeColors: Record<string, string> = {
     fire: "var(--pokemon-type-fire)",
@@ -49,13 +54,47 @@ function RouteComponent() {
         <CardContent className="pt-6">
           <div className="flex flex-col items-center gap-6 md:flex-row">
             {/* Artwork */}
-            <div className="flex h-48 w-48 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/40 shadow-inner">
+            <button
+              type="button"
+              disabled={!hasFlipArtwork}
+              onClick={() => {
+                if (hasFlipArtwork) setShowShiny((prev) => !prev);
+              }}
+              className="group flex h-48 w-48 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border/60 bg-muted/40 shadow-inner disabled:cursor-default"
+              aria-pressed={hasFlipArtwork ? showShiny : undefined}
+              aria-label={hasFlipArtwork ? "Flip artwork" : "Artwork"}
+              title={hasFlipArtwork ? "Click to flip artwork" : "No shiny artwork available"}
+            >
               {artwork ? (
-                <img src={artwork} alt={name} className="h-40 w-40 object-contain drop-shadow-sm" />
+                <div
+                  className="relative h-40 w-40 transition-transform duration-500"
+                  style={{
+                    transformStyle: "preserve-3d",
+                    transform: showShiny ? "rotateY(180deg)" : "rotateY(0deg)",
+                  }}
+                >
+                  <img
+                    src={artwork}
+                    alt={`${name} default artwork`}
+                    className="absolute inset-0 h-40 w-40 object-contain drop-shadow-sm"
+                    style={{ backfaceVisibility: "hidden" }}
+                  />
+                  {shinyArtwork ? (
+                    <img
+                      src={shinyArtwork}
+                      alt={`${name} shiny artwork`}
+                      className="absolute inset-0 h-40 w-40 object-contain drop-shadow-sm"
+                      style={{
+                        backfaceVisibility: "hidden",
+                        transform: "rotateY(180deg)",
+                      }}
+                    />
+                  ) : null}
+                </div>
               ) : (
                 <div className="text-sm text-muted-foreground">No image</div>
               )}
-            </div>
+            </button>
 
             {/* Header & badges */}
             <div className="flex-1">
