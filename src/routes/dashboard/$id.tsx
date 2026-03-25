@@ -1,6 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPokemonQuery } from "@/api/pokemon";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/dashboard/$id")({
   loader: (options) =>
@@ -18,120 +21,127 @@ function RouteComponent() {
   const artwork = sprites?.other?.["official-artwork"]?.front_default || sprites?.front_default;
 
   const typeColors: Record<string, string> = {
-    fire: "bg-red-400/90",
-    water: "bg-blue-400/90",
-    grass: "bg-green-400/90",
-    electric: "bg-yellow-300/90",
-    rock: "bg-stone-400/90",
-    ground: "bg-amber-300/90",
-    psychic: "bg-pink-300/90",
-    ice: "bg-cyan-200/90",
-    dragon: "bg-indigo-500/90",
-    dark: "bg-gray-700/90",
-    ghost: "bg-violet-700/90",
-    steel: "bg-slate-400/90",
-    normal: "bg-zinc-300/90",
-    poison: "bg-violet-400/90",
-    fairy: "bg-pink-200/90",
-    bug: "bg-lime-400/90",
-    fighting: "bg-orange-500/90",
-    flying: "bg-sky-200/90",
+    fire: "var(--pokemon-type-fire)",
+    water: "var(--pokemon-type-water)",
+    grass: "var(--pokemon-type-grass)",
+    electric: "var(--pokemon-type-electric)",
+    rock: "var(--pokemon-type-rock)",
+    ground: "var(--pokemon-type-ground)",
+    psychic: "var(--pokemon-type-psychic)",
+    ice: "var(--pokemon-type-ice)",
+    dragon: "var(--pokemon-type-dragon)",
+    dark: "var(--pokemon-type-dark)",
+    ghost: "var(--pokemon-type-ghost)",
+    steel: "var(--pokemon-type-steel)",
+    normal: "var(--pokemon-type-normal)",
+    poison: "var(--pokemon-type-poison)",
+    fairy: "var(--pokemon-type-fairy)",
+    bug: "var(--pokemon-type-bug)",
+    fighting: "var(--pokemon-type-fighting)",
+    flying: "var(--pokemon-type-flying)",
   };
 
   const statPct = (v: number) => Math.min(100, Math.round((v / 255) * 100));
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pt-12">
-      <div className="overflow-hidden rounded-2xl bg-linear-to-br from-indigo-50 to-pink-50 shadow-lg">
-        <div className="flex flex-col items-center gap-6 p-6 md:flex-row">
-          {/* Artwork */}
-          <div className="flex h-48 w-48 shrink-0 items-center justify-center rounded-xl bg-white/60 shadow-inner">
-            {artwork ? (
-              <img src={artwork} alt={name} className="h-40 w-40 object-contain drop-shadow-sm" />
-            ) : (
-              <div className="text-sm text-gray-500">No image</div>
-            )}
-          </div>
+    <div className="reveal mx-auto max-w-4xl px-6 pt-12">
+      <Card className="border-border/70 shadow-lg">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center gap-6 md:flex-row">
+            {/* Artwork */}
+            <div className="flex h-48 w-48 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/40 shadow-inner">
+              {artwork ? (
+                <img src={artwork} alt={name} className="h-40 w-40 object-contain drop-shadow-sm" />
+              ) : (
+                <div className="text-sm text-muted-foreground">No image</div>
+              )}
+            </div>
 
-          {/* Header & badges */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-extrabold tracking-tight">
-                  {displayName(name)} <span className="text-gray-500">#{id}</span>
-                </h1>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Height: {(height ?? 0) / 10} m</span>
-                  <span className="text-sm text-gray-600">•</span>
-                  <span className="text-sm text-gray-600">Weight: {(weight ?? 0) / 10} kg</span>
+            {/* Header & badges */}
+            <div className="flex-1">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle className="text-2xl font-extrabold tracking-tight md:text-3xl">
+                    {displayName(name)} <span className="text-muted-foreground">#{id}</span>
+                  </CardTitle>
+                  <div className="mt-2 flex items-center gap-2">
+                    <CardDescription>Height: {(height ?? 0) / 10} m</CardDescription>
+                    <CardDescription>•</CardDescription>
+                    <CardDescription>Weight: {(weight ?? 0) / 10} kg</CardDescription>
+                  </div>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <Link to={".."}>Back</Link>
+                </Button>
+              </div>
+
+              {/* Types */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {types.map((t) => {
+                  const typeName = t.type.name;
+                  const color = typeColors[typeName] ?? "var(--muted-foreground)";
+                  return (
+                    <Badge
+                      key={typeName}
+                      className="border-transparent text-white"
+                      style={{ backgroundColor: color }}
+                    >
+                      {displayName(typeName)}
+                    </Badge>
+                  );
+                })}
+              </div>
+
+              {/* Abilities */}
+              <div className="mt-4">
+                <h3 className="text-base font-semibold tracking-tight text-foreground">
+                  Abilities
+                </h3>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {abilities.map((a) => (
+                    <Badge
+                      key={a.ability.name}
+                      variant="outline"
+                      className="bg-muted/30"
+                      title={a.ability.name}
+                    >
+                      {displayName(a.ability.name.replace("-", " "))}
+                      {a.is_hidden ? " (Hidden)" : ""}
+                    </Badge>
+                  ))}
                 </div>
               </div>
-              <Link
-                to={".."}
-                className="rounded-full bg-white/70 px-3 py-1 text-sm shadow-sm hover:bg-white"
-              >
-                Back
-              </Link>
-            </div>
-
-            {/* Types */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {types.map((t) => {
-                const typeName = t.type.name;
-                const bg = typeColors[typeName] ?? "bg-gray-300";
-                return (
-                  <span
-                    key={typeName}
-                    className={`${bg} rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm`}
-                  >
-                    {displayName(typeName)}
-                  </span>
-                );
-              })}
-            </div>
-
-            {/* Abilities */}
-            <div className="mt-4">
-              <h3 className="text-sm font-semibold text-gray-700">Abilities</h3>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {abilities.map((a) => (
-                  <span
-                    key={a.ability.name}
-                    className="rounded-full border bg-white/60 px-2 py-1 text-xs"
-                    title={a.ability.name}
-                  >
-                    {displayName(a.ability.name.replace("-", " "))}
-                    {a.is_hidden ? " (Hidden)" : ""}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
-        </div>
+        </CardContent>
 
         {/* Stats */}
-        <div className="border-t bg-white/30 p-6">
-          <h3 className="mb-4 text-sm font-semibold text-gray-700">Base Stats</h3>
+        <CardHeader className="border-t">
+          <h3 className="mb-4 text-base font-semibold tracking-tight text-foreground">
+            Base Stats
+          </h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {stats.map((s) => (
               <div key={s.stat.name} className="flex items-center gap-4">
-                <div className="w-28 text-xs text-gray-600">
+                <div className="w-28 text-xs text-muted-foreground">
                   {displayName(s.stat.name.replace("-", " "))}
                 </div>
                 <div className="flex-1">
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full bg-linear-to-r from-green-400 to-lime-400"
+                      className="h-full bg-linear-to-r from-primary/75 to-accent/80"
                       style={{ width: `${statPct(s.base_stat)}%` }}
                     />
                   </div>
                 </div>
-                <div className="w-12 text-right font-mono text-sm text-gray-700">{s.base_stat}</div>
+                <div className="w-12 text-right font-mono text-sm text-foreground">
+                  {s.base_stat}
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
     </div>
   );
 }

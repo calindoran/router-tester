@@ -2,14 +2,26 @@ import { useAuth } from "@/auth/AuthProvider";
 import { sleep } from "@/utils/sleep";
 import { useForm, type AnyFieldApi } from "@tanstack/react-form";
 import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function FieldInfo({ field }: { field: AnyFieldApi }) {
   return (
     <>
       {field.state.meta.isTouched && !field.state.meta.isValid ? (
-        <em>{field.state.meta.errors.join(", ")}</em>
+        <em className="text-xs text-destructive">{field.state.meta.errors.join(", ")}</em>
       ) : null}
-      {field.state.meta.isValidating ? "Validating..." : null}
+      {field.state.meta.isValidating ? (
+        <span className="text-xs text-muted-foreground">Validating...</span>
+      ) : null}
     </>
   );
 }
@@ -44,9 +56,11 @@ export const Login = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-linear-to-b sm:px-6 lg:px-8">
-      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="p-6">
-          <h3 className="text-xl">Login</h3>
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+        </CardHeader>
+        <CardContent>
           <form
             className="mt-4 max-w-lg"
             onSubmit={(e) => {
@@ -77,13 +91,12 @@ export const Login = () => {
               >
                 {(field) => (
                   <>
-                    <input
+                    <Input
                       id={field.name}
                       name={field.name}
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       placeholder="Enter your username"
                     />
                     <FieldInfo field={field} />
@@ -101,33 +114,33 @@ export const Login = () => {
               >
                 {(field) => (
                   <>
-                    <select
-                      id={field.name}
-                      name={field.name}
+                    <Select
                       value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      onValueChange={(value) => field.handleChange(value)}
+                      onOpenChange={(open) => {
+                        if (!open) field.handleBlur();
+                      }}
                     >
-                      <option value="">Select a role</option>
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                      <SelectTrigger id={field.name} className="w-full">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FieldInfo field={field} />
                   </>
                 )}
               </form.Field>
             </div>
 
-            <button
-              type="submit"
-              className="mt-4 w-full rounded-md bg-blue-500 px-4 py-2 text-white disabled:bg-gray-300 disabled:text-gray-500"
-            >
+            <Button type="submit" className="mt-4 w-full" disabled={isLoggingIn}>
               {isLoggingIn ? "Loading..." : "Login"}
-            </button>
+            </Button>
           </form>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

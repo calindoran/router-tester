@@ -6,8 +6,18 @@ import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 import reportWebVitals from "./reportWebVitals";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep data reasonably fresh but avoid excessive refetches
+      staleTime: 1000 * 60, // 1 minute
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const router = createRouter({
   routeTree,
@@ -40,7 +50,9 @@ if (rootElement && !rootElement.innerHTML) {
     <StrictMode>
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
-          <App />
+          <TooltipProvider>
+            <App />
+          </TooltipProvider>
         </QueryClientProvider>
       </AuthProvider>
     </StrictMode>,

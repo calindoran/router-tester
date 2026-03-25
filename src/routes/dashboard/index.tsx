@@ -2,9 +2,30 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import React from "react";
+import { ArrowRight } from "lucide-react";
 import { useDebounceCallback } from "usehooks-ts";
 import { getAllPokemonQuery, type PokemonRefDto } from "@/api/pokemon";
 import ErrorNotification from "@/components/ErrorNotification";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/dashboard/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getAllPokemonQuery(20, 0)),
@@ -36,9 +57,9 @@ function DashboardComponent() {
           if (!row.getValue()) return null;
           return (
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/60 text-sm font-semibold text-slate-700">
-                {String(row.getValue()).charAt(0).toUpperCase()}
-              </div>
+              <Avatar>
+                <AvatarFallback>{String(row.getValue()).charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
               <div className="text-sm font-medium">{String(row.getValue()).toUpperCase()}</div>
             </div>
           );
@@ -47,16 +68,16 @@ function DashboardComponent() {
       {
         id: "actions",
         accessorKey: "name",
-        header: "Actions",
+        header: () => <div className="text-right">Actions</div>,
         cell: (row) => {
           const href = `/dashboard/${row.getValue()}`;
           return (
-            <Link
-              to={href}
-              className="rounded-full bg-white/70 px-3 py-1 text-sm shadow-sm hover:bg-white"
-            >
-              View Details
-            </Link>
+            <Button asChild size="sm" variant="outline" className="ml-auto">
+              <Link to={href}>
+                <span>View Details</span>
+                <ArrowRight />
+              </Link>
+            </Button>
           );
         },
       },
@@ -73,133 +94,122 @@ function DashboardComponent() {
   if (!data) return <ErrorNotification error={new Error("No data found")} />;
 
   return (
-    <main className="mx-auto max-w-4xl px-6 pt-12">
-      <div className="overflow-hidden rounded-2xl bg-linear-to-br from-indigo-50 to-pink-50 shadow-lg">
-        <div className="flex items-center justify-between p-6">
+    <main className="reveal mx-auto max-w-4xl px-6 pt-12">
+      <Card className="border-border/70 shadow-lg">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight">Pokédex</h1>
-            <p className="mt-1 text-sm text-gray-600">Browse Pokémon (sample list)</p>
+            <CardTitle className="text-2xl font-extrabold tracking-tight md:text-3xl">
+              Pokédex
+            </CardTitle>
+            <CardDescription className="mt-1 text-sm">Browse Pokémon (sample list)</CardDescription>
           </div>
-          {/* Placeholder for a global action */}
-          <div className="flex items-center gap-3">
-            <input
+          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:flex-nowrap">
+            <Input
               type="search"
               placeholder="Search Pokémon"
               defaultValue={filter}
               onChange={(e) => debounced(e.target.value)}
-              className="w-64 rounded-full bg-white/70 px-3 py-1 text-sm shadow-sm transition placeholder:text-gray-500 hover:bg-white focus:ring-2 focus:ring-indigo-300 focus:outline-none"
+              className="w-full sm:w-64"
               aria-label="Search Pokémon"
             />
-            <button
-              onClick={() => refetch()}
-              className="rounded-full bg-white/70 px-3 py-1 text-sm shadow-sm hover:bg-white"
-              type="button"
-            >
+            <Button onClick={() => refetch()} type="button" variant="outline">
               Refresh
-            </button>
+            </Button>
           </div>
-        </div>
+        </CardHeader>
 
-        <div className="border-t bg-white/30 p-6">
-          <section className="mt-2 max-h-120 overflow-y-auto">
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="text-xs font-semibold tracking-[0.12em] uppercase">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id} className="border-b border-slate-800">
-                      {headerGroup.headers.map((header) => (
-                        <th key={header.id} className="px-6 py-3">
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {table.getRowModel().rows.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={table.getAllColumns().length}
-                        className="px-6 py-12 text-center text-sm"
-                      >
-                        No data
-                      </td>
-                    </tr>
-                  ) : (
-                    table.getRowModel().rows.map((row) => {
-                      const href = `/${row.original.name}`;
-                      return (
-                        <tr key={row.id} className="transition-colors hover:bg-slate-900/60">
-                          {row.getVisibleCells().map((cell) => {
-                            const isActionsCell = cell.column.id === "actions";
-
-                            return (
-                              <td key={cell.id} className="px-6 py-4 align-middle">
-                                {isActionsCell ? (
-                                  flexRender(cell.column.columnDef.cell, cell.getContext())
-                                ) : (
-                                  <Link to={href} className="block h-full w-full cursor-pointer">
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                  </Link>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+        <CardContent className="border-t pt-6">
+          <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className="border-b border-border">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={table.getAllColumns().length}>No data</TableCell>
+                  </TableRow>
+                ) : (
+                  table.getRowModel().rows.map((row) => {
+                    return (
+                      <TableRow key={row.id}>
+                        {row.getVisibleCells().map((cell) => {
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              className={cell.column.id === "actions" ? "text-right" : undefined}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
           </section>
-          <div className="mt-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <button
+          <div className="mt-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
                 type="button"
                 onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
                 disabled={pageIndex === 0}
-                className="rounded-full bg-white/70 px-3 py-1 shadow-sm hover:bg-white disabled:opacity-50"
+                variant="outline"
+                size="sm"
               >
                 Previous
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 onClick={() => setPageIndex((p) => p + 1)}
                 disabled={pageIndex + 1 >= Math.ceil(data.count / pageSize)}
-                className="rounded-full bg-white/70 px-3 py-1 shadow-sm hover:bg-white disabled:opacity-50"
+                variant="outline"
+                size="sm"
               >
                 Next
-              </button>
-              <span className="ml-3 text-sm text-gray-600">
+              </Button>
+              <Badge variant="outline" className="ml-1 sm:ml-3">
                 Page {pageIndex + 1} of {Math.ceil(data.count / pageSize)}
                 {isFetching ? " (loading...)" : ""}
-              </span>
+              </Badge>
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-600" htmlFor={rowsPerPageId}>
+              <label className="text-sm text-muted-foreground" htmlFor={rowsPerPageId}>
                 Rows:
               </label>
-              <select
-                id={rowsPerPageId}
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
+              <Select
+                value={String(pageSize)}
+                onValueChange={(value) => {
+                  setPageSize(Number(value));
                   setPageIndex(0);
                 }}
-                className="rounded px-2 py-1"
               >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
+                <SelectTrigger id={rowsPerPageId} className="w-20">
+                  <SelectValue placeholder="Rows" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </main>
   );
 }

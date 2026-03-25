@@ -1,17 +1,24 @@
+import * as React from "react";
 import { useAuth } from "@/auth/AuthProvider";
 import { Link, UseNavigateResult, useRouter } from "@tanstack/react-router";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export default function Header({ navigate }: { navigate: UseNavigateResult<"/"> }) {
   const router = useRouter();
   const auth = useAuth();
+  const [showConfirm, setShowConfirm] = React.useState(false);
 
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      auth.logout().then(() => {
-        router.invalidate().finally(() => {
-          navigate({ to: "/" });
-        });
-      });
+  const handleLogoutConfirm = async () => {
+    setShowConfirm(false);
+    try {
+      await auth.logout();
+      await router.invalidate();
+      navigate({ to: "/" });
+    } catch (err) {
+      console.error("Logout failed", err);
     }
   };
 
@@ -20,25 +27,54 @@ export default function Header({ navigate }: { navigate: UseNavigateResult<"/"> 
   }
 
   return (
-    <header className="sticky top-0 z-40 px-4 pt-5 pb-3">
-      <div className="relative mx-auto flex items-center justify-between gap-3 rounded-2xl border border-white/20 px-3.5 py-2.5 shadow-[0_8px_40px_rgba(2,6,23,0.3)] saturate-125 backdrop-blur-lg">
-        <div className="flex items-center gap-6">
-          <Link to="/dashboard" data-label="Home">
-            <span>Home</span>
-          </Link>
-          <Link to="/generations" data-label="Generations">
-            Generations
-          </Link>
+    <>
+      <header className="sticky top-0 z-40 px-4 pt-5 pb-3">
+        <div className="relative mx-auto flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card/85 px-3.5 py-2.5 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center gap-6">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/dashboard" data-label="Home">
+                <span>Home</span>
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/generations" data-label="Generations">
+                Generations
+              </Link>
+            </Button>
+          </div>
+          <div className="flex items-center gap-4">
+            <Badge variant="outline" className="capitalize">
+              {auth.user?.role ?? "user"}
+            </Badge>
+            <Avatar size="sm">
+              <AvatarFallback>
+                {auth.user?.username?.slice(0, 1).toUpperCase() ?? "U"}
+              </AvatarFallback>
+            </Avatar>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://pokeapi.co" target="_blank" rel="noreferrer" data-label="PokeAPI">
+                <span>PokeAPI</span>
+              </a>
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowConfirm(true)}
+            >
+              Logout
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <a href="https://pokeapi.co" target="_blank" rel="noreferrer" data-label="PokeAPI">
-            <span>PokeAPI</span>
-          </a>
-          <button type="button" className="hover:underline" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </div>
-    </header>
+      </header>
+
+      <ConfirmDialog
+        open={showConfirm}
+        title="Logout"
+        description="Are you sure you want to logout?"
+        onConfirm={handleLogoutConfirm}
+        onCancel={() => setShowConfirm(false)}
+      />
+    </>
   );
 }

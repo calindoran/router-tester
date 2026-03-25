@@ -1,3 +1,4 @@
+import { Spinner } from "@/components/Spinner";
 import { createFileRoute } from "@tanstack/react-router";
 import React from "react";
 
@@ -9,7 +10,13 @@ export const Route = createFileRoute("/")({
 
 function App() {
   return (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense
+      fallback={
+        <div className="pointer-events-none fixed top-20 left-2">
+          <Spinner show={true} />
+        </div>
+      }
+    >
       <DashboardLazy />
     </React.Suspense>
   );

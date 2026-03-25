@@ -1,49 +1,59 @@
-async function getAllPokemon(limit: number, offset: number) {
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`)
-    .then((res) => res.json())
-    .then((data) => data as PokemonListResponse);
-  return response;
+async function getAllPokemon(limit: number, offset: number, signal?: AbortSignal) {
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`, {
+    signal,
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch pokemon list: ${res.status} ${res.statusText}`);
+  }
+  const data = (await res.json()) as PokemonListResponse;
+  return data;
 }
 
 export const getAllPokemonQuery = (limit: number, offset: number) => ({
-  queryKey: ["pokemon", limit, offset],
-  queryFn: () => getAllPokemon(limit, offset),
+  queryKey: ["pokemon", { limit, offset }],
+  queryFn: ({ signal }: { signal?: AbortSignal }) => getAllPokemon(limit, offset, signal),
 });
 
-async function getPokemon(name: string) {
-  const response = fetch(`https://pokeapi.co/api/v2/pokemon/${name}`)
-    .then((res) => res.json())
-    .then((data) => data as PokemonDto);
-  return response;
+async function getPokemon(name: string, signal?: AbortSignal) {
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`, { signal });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch pokemon ${name}: ${res.status} ${res.statusText}`);
+  }
+  const data = (await res.json()) as PokemonDto;
+  return data;
 }
 
 export const getPokemonQuery = (name: string) => ({
-  queryKey: [name],
-  queryFn: () => getPokemon(name),
+  queryKey: ["pokemon", name],
+  queryFn: ({ signal }: { signal?: AbortSignal }) => getPokemon(name, signal),
 });
 
-async function getGeneration() {
-  const response = fetch(`https://pokeapi.co/api/v2/generation/`)
-    .then((res) => res.json())
-    .then((data) => data as GenerationListResponse);
-  return response;
+async function getGeneration(signal?: AbortSignal) {
+  const res = await fetch(`https://pokeapi.co/api/v2/generation/`, { signal });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch generations: ${res.status} ${res.statusText}`);
+  }
+  const data = (await res.json()) as GenerationListResponse;
+  return data;
 }
 
 export const getGenerationQuery = () => ({
   queryKey: ["generation"],
-  queryFn: () => getGeneration(),
+  queryFn: ({ signal }: { signal?: AbortSignal }) => getGeneration(signal),
 });
 
-async function getGenerationDetails(id: string) {
-  const response = fetch(`https://pokeapi.co/api/v2/generation/${id}`)
-    .then((res) => res.json())
-    .then((data) => data as GenerationDto);
-  return response;
+async function getGenerationDetails(id: string, signal?: AbortSignal) {
+  const res = await fetch(`https://pokeapi.co/api/v2/generation/${id}`, { signal });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch generation ${id}: ${res.status} ${res.statusText}`);
+  }
+  const data = (await res.json()) as GenerationDto;
+  return data;
 }
 
 export const getGenerationDetailsQuery = (id: string) => ({
   queryKey: ["generation", id],
-  queryFn: () => getGenerationDetails(id),
+  queryFn: ({ signal }: { signal?: AbortSignal }) => getGenerationDetails(id, signal),
 });
 
 export interface GenerationListResponse {

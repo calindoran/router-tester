@@ -1,6 +1,8 @@
 import { sleep } from "@/utils/sleep";
 import * as React from "react";
 import { Login } from "./Login";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type PreAuthView = "splash" | "login";
 
@@ -60,14 +62,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsBootstrapping(false);
   }, []);
 
+  const splashShell = (content: React.ReactNode) => (
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-background via-muted/40 to-accent/10 px-4 sm:px-6 lg:px-8">
+      <Card className="reveal w-full max-w-md border-border/70 shadow-xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold tracking-tight">
+            Welcome to Router Tester
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Check out the demo by logging in with any username and selecting a role.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>{content}</CardContent>
+      </Card>
+    </div>
+  );
+
   if (isBootstrapping) {
     return (
       <AuthContext.Provider value={{ isAuthenticated: false, user: null, login, logout }}>
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-linear-to-b sm:px-6 lg:px-8">
-          <div className="w-full max-w-md overflow-hidden rounded-xl bg-white p-8 text-center shadow-xl">
-            <p className="text-sm text-gray-500">Loading session...</p>
-          </div>
-        </div>
+        {splashShell(<p className="text-sm text-muted-foreground">Loading session...</p>)}
       </AuthContext.Provider>
     );
   }
@@ -77,21 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {isAuthenticated ? (
         <>{children}</>
       ) : preAuthView === "splash" ? (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-linear-to-b sm:px-6 lg:px-8">
-          <div className="w-full max-w-md overflow-hidden rounded-xl bg-white p-8 text-center shadow-xl">
-            <h1 className="text-2xl font-semibold text-gray-900">Welcome to Router Tester</h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Check out the demo by logging in with any username and selecting a role
-            </p>
-            <button
-              type="button"
-              onClick={() => setPreAuthView("login")}
-              className="mt-6 w-full rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-            >
-              Login
-            </button>
-          </div>
-        </div>
+        splashShell(
+          <Button type="button" onClick={() => setPreAuthView("login")} className="mt-6 w-full">
+            Login
+          </Button>,
+        )
       ) : (
         <Login />
       )}
