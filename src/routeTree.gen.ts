@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MovesIndexRouteImport } from './routes/moves/index'
 import { Route as ItemsIndexRouteImport } from './routes/items/index'
 import { Route as GenerationsIndexRouteImport } from './routes/generations/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as MovesMoveIdRouteImport } from './routes/moves/$moveId'
 import { Route as ItemsItemIdRouteImport } from './routes/items/$itemId'
 import { Route as GenerationsGenerationIdRouteImport } from './routes/generations/$generationId'
 import { Route as DashboardIdRouteImport } from './routes/dashboard/$id'
@@ -20,6 +22,11 @@ import { Route as DashboardIdRouteImport } from './routes/dashboard/$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MovesIndexRoute = MovesIndexRouteImport.update({
+  id: '/moves/',
+  path: '/moves/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ItemsIndexRoute = ItemsIndexRouteImport.update({
@@ -35,6 +42,11 @@ const GenerationsIndexRoute = GenerationsIndexRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MovesMoveIdRoute = MovesMoveIdRouteImport.update({
+  id: '/moves/$moveId',
+  path: '/moves/$moveId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
@@ -58,18 +70,22 @@ export interface FileRoutesByFullPath {
   '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
   '/items/$itemId': typeof ItemsItemIdRoute
+  '/moves/$moveId': typeof MovesMoveIdRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/generations/': typeof GenerationsIndexRoute
   '/items/': typeof ItemsIndexRoute
+  '/moves/': typeof MovesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
   '/items/$itemId': typeof ItemsItemIdRoute
+  '/moves/$moveId': typeof MovesMoveIdRoute
   '/dashboard': typeof DashboardIndexRoute
   '/generations': typeof GenerationsIndexRoute
   '/items': typeof ItemsIndexRoute
+  '/moves': typeof MovesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,9 +93,11 @@ export interface FileRoutesById {
   '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
   '/items/$itemId': typeof ItemsItemIdRoute
+  '/moves/$moveId': typeof MovesMoveIdRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/generations/': typeof GenerationsIndexRoute
   '/items/': typeof ItemsIndexRoute
+  '/moves/': typeof MovesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,27 +106,33 @@ export interface FileRouteTypes {
     | '/dashboard/$id'
     | '/generations/$generationId'
     | '/items/$itemId'
+    | '/moves/$moveId'
     | '/dashboard/'
     | '/generations/'
     | '/items/'
+    | '/moves/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard/$id'
     | '/generations/$generationId'
     | '/items/$itemId'
+    | '/moves/$moveId'
     | '/dashboard'
     | '/generations'
     | '/items'
+    | '/moves'
   id:
     | '__root__'
     | '/'
     | '/dashboard/$id'
     | '/generations/$generationId'
     | '/items/$itemId'
+    | '/moves/$moveId'
     | '/dashboard/'
     | '/generations/'
     | '/items/'
+    | '/moves/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -116,9 +140,11 @@ export interface RootRouteChildren {
   DashboardIdRoute: typeof DashboardIdRoute
   GenerationsGenerationIdRoute: typeof GenerationsGenerationIdRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
+  MovesMoveIdRoute: typeof MovesMoveIdRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   GenerationsIndexRoute: typeof GenerationsIndexRoute
   ItemsIndexRoute: typeof ItemsIndexRoute
+  MovesIndexRoute: typeof MovesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moves/': {
+      id: '/moves/'
+      path: '/moves'
+      fullPath: '/moves/'
+      preLoaderRoute: typeof MovesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/items/': {
@@ -149,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moves/$moveId': {
+      id: '/moves/$moveId'
+      path: '/moves/$moveId'
+      fullPath: '/moves/$moveId'
+      preLoaderRoute: typeof MovesMoveIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/items/$itemId': {
@@ -180,9 +220,11 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardIdRoute: DashboardIdRoute,
   GenerationsGenerationIdRoute: GenerationsGenerationIdRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,
+  MovesMoveIdRoute: MovesMoveIdRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   GenerationsIndexRoute: GenerationsIndexRoute,
   ItemsIndexRoute: ItemsIndexRoute,
+  MovesIndexRoute: MovesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
