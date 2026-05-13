@@ -17,7 +17,7 @@ function GenerationsComponent() {
       <Card className="border-border/70 shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold tracking-tight md:text-3xl">
-            Generations
+            Game Generations
           </CardTitle>
           <CardDescription className="text-sm">
             Use the links below to navigate to different generations.
@@ -26,24 +26,28 @@ function GenerationsComponent() {
         <CardContent>
           <div className="space-y-3">
             <div className="flex flex-col gap-2.5">
-              {data.results?.map((gen, index) => (
-                <div
-                  key={gen.name}
-                  className="reveal-stagger"
-                  style={{ animationDelay: `${index * 25}ms` }}
-                >
-                  <Button asChild variant="outline" className="w-full justify-start">
-                    <Link
-                      to={`/generations/$generationId`}
-                      params={{
-                        generationId: `${index + 1}`,
-                      }}
-                    >
-                      {gen.name}
-                    </Link>
-                  </Button>
-                </div>
-              ))}
+              {data.results?.map((gen, index) => {
+                const delay = (gen.name.length % 12) * 20;
+                const genName = gen.name.replace("generation-", "Game Gen ").toUpperCase();
+                return (
+                  <div
+                    key={gen.name}
+                    className="reveal-stagger"
+                    style={{ animationDelay: `${delay}ms` }}
+                  >
+                    <Button asChild variant="outline" className="w-full justify-start">
+                      <Link
+                        to={`/generations/$generationId`}
+                        params={{
+                          generationId: `${index + 1}`,
+                        }}
+                      >
+                        <span>{genName}</span>
+                      </Link>
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </CardContent>

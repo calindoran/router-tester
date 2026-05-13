@@ -38,7 +38,7 @@ export default function Header({ navigate }: { navigate: UseNavigateResult<"/"> 
             </Button>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/generations" data-label="Generations">
-                Generations
+                <span>Game Generations</span>
               </Link>
             </Button>
           </div>

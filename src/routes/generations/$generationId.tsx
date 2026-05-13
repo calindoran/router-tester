@@ -22,7 +22,7 @@ function RouteComponent() {
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-2xl font-extrabold tracking-tight md:text-3xl">
-              {data.name} <span className="text-muted-foreground">#{data.id}</span>
+              <span className="text-muted-foreground">Game Gen #{data.id}</span>
             </CardTitle>
             <div className="mt-2 flex items-center gap-2">
               <CardDescription>Main Region: {data.main_region.name}</CardDescription>
@@ -40,29 +40,33 @@ function RouteComponent() {
         <CardContent>
           <div className="mt-8">
             <h2 className="mb-4 text-xl font-semibold tracking-tight md:text-2xl">
-              Pokemon Species
+              Pokemon Species in this Generation
             </h2>
             <div className="mt-2 max-h-120 overflow-y-auto">
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-                {data.pokemon_species.map((species) => (
-                  <Button
-                    key={species.name}
-                    asChild
-                    variant="secondary"
-                    size="sm"
-                    className="reveal-stagger justify-center"
-                    style={{ animationDelay: `${(species.name.length % 12) * 20}ms` }}
-                  >
-                    <Link
-                      to={`/dashboard/$id`}
-                      params={{
-                        id: species.name,
-                      }}
+                {data.pokemon_species.map((species) => {
+                  const delay = (species.name.length % 12) * 20;
+                  const pokemonName = species.name.charAt(0).toUpperCase() + species.name.slice(1);
+                  return (
+                    <Button
+                      key={species.name}
+                      asChild
+                      variant="secondary"
+                      size="sm"
+                      className="reveal-stagger justify-center"
+                      style={{ animationDelay: `${delay}ms` }}
                     >
-                      <span>{species.name}</span>
-                    </Link>
-                  </Button>
-                ))}
+                      <Link
+                        to={`/dashboard/$id`}
+                        params={{
+                          id: species.name,
+                        }}
+                      >
+                        <span>{pokemonName}</span>
+                      </Link>
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           </div>
