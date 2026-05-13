@@ -41,6 +41,11 @@ export default function Header({ navigate }: { navigate: UseNavigateResult<"/"> 
                 <span>Game Generations</span>
               </Link>
             </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/items" data-label="Items">
+                <span>Items</span>
+              </Link>
+            </Button>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="capitalize">

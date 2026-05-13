@@ -10,14 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ItemsIndexRouteImport } from './routes/items/index'
 import { Route as GenerationsIndexRouteImport } from './routes/generations/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as ItemsItemIdRouteImport } from './routes/items/$itemId'
 import { Route as GenerationsGenerationIdRouteImport } from './routes/generations/$generationId'
 import { Route as DashboardIdRouteImport } from './routes/dashboard/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItemsIndexRoute = ItemsIndexRouteImport.update({
+  id: '/items/',
+  path: '/items/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GenerationsIndexRoute = GenerationsIndexRouteImport.update({
@@ -28,6 +35,11 @@ const GenerationsIndexRoute = GenerationsIndexRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
+  id: '/items/$itemId',
+  path: '/items/$itemId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GenerationsGenerationIdRoute = GenerationsGenerationIdRouteImport.update({
@@ -45,23 +57,29 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/items/$itemId': typeof ItemsItemIdRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/generations/': typeof GenerationsIndexRoute
+  '/items/': typeof ItemsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/items/$itemId': typeof ItemsItemIdRoute
   '/dashboard': typeof DashboardIndexRoute
   '/generations': typeof GenerationsIndexRoute
+  '/items': typeof ItemsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard/$id': typeof DashboardIdRoute
   '/generations/$generationId': typeof GenerationsGenerationIdRoute
+  '/items/$itemId': typeof ItemsItemIdRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/generations/': typeof GenerationsIndexRoute
+  '/items/': typeof ItemsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -69,30 +87,38 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard/$id'
     | '/generations/$generationId'
+    | '/items/$itemId'
     | '/dashboard/'
     | '/generations/'
+    | '/items/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard/$id'
     | '/generations/$generationId'
+    | '/items/$itemId'
     | '/dashboard'
     | '/generations'
+    | '/items'
   id:
     | '__root__'
     | '/'
     | '/dashboard/$id'
     | '/generations/$generationId'
+    | '/items/$itemId'
     | '/dashboard/'
     | '/generations/'
+    | '/items/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardIdRoute: typeof DashboardIdRoute
   GenerationsGenerationIdRoute: typeof GenerationsGenerationIdRoute
+  ItemsItemIdRoute: typeof ItemsItemIdRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   GenerationsIndexRoute: typeof GenerationsIndexRoute
+  ItemsIndexRoute: typeof ItemsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/items/': {
+      id: '/items/'
+      path: '/items'
+      fullPath: '/items/'
+      preLoaderRoute: typeof ItemsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generations/': {
@@ -116,6 +149,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/items/$itemId': {
+      id: '/items/$itemId'
+      path: '/items/$itemId'
+      fullPath: '/items/$itemId'
+      preLoaderRoute: typeof ItemsItemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generations/$generationId': {
@@ -139,8 +179,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardIdRoute: DashboardIdRoute,
   GenerationsGenerationIdRoute: GenerationsGenerationIdRoute,
+  ItemsItemIdRoute: ItemsItemIdRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   GenerationsIndexRoute: GenerationsIndexRoute,
+  ItemsIndexRoute: ItemsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
