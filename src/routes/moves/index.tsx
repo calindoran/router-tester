@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useDebounceCallback } from "usehooks-ts";
 import { getAllMovesQuery, getMoveQuery } from "@/api/moves";
 import ErrorNotification from "@/components/ErrorNotification";
@@ -28,6 +29,18 @@ export const Route = createFileRoute("/moves/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getAllMovesQuery(5000, 0)),
   component: RouteComponent,
 });
+
+type MoveRow = {
+  name: string;
+  url: string;
+};
+
+type MoveDetails = {
+  type: string;
+  power: number | null;
+  accuracy: number | null;
+  damageClass: string;
+};
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
@@ -64,15 +77,7 @@ function RouteComponent() {
   });
 
   const detailsByName = React.useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        type: string;
-        power: number | null;
-        accuracy: number | null;
-        damageClass: string;
-      }
-    >();
+    const map = new Map<string, MoveDetails>();
 
     visibleRows.forEach((move, index) => {
       const detail = detailQueries[index]?.data;
@@ -97,6 +102,63 @@ function RouteComponent() {
       params: { moveId: name },
     });
   };
+
+  const columns: ColumnDef<MoveRow>[] = React.useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Move",
+        cell: ({ row }) => {
+          const displayName = row.original.name.replaceAll("-", " ").toUpperCase();
+          return <div className="text-sm font-medium">{displayName}</div>;
+        },
+      },
+      {
+        id: "type",
+        header: "Type",
+        cell: ({ row }) => {
+          const details = detailsByName.get(row.original.name);
+          return (
+            <>
+              <Badge variant="outline" className="bg-muted/30 capitalize">
+                {details?.type ?? "Loading"}
+              </Badge>
+              {details?.damageClass ? (
+                <Badge variant="secondary" className="ml-2 capitalize">
+                  {details.damageClass}
+                </Badge>
+              ) : null}
+            </>
+          );
+        },
+      },
+      {
+        id: "power",
+        header: () => <div className="text-right">Power</div>,
+        cell: ({ row }) => {
+          const details = detailsByName.get(row.original.name);
+          return (
+            <div className="text-right font-mono text-sm">
+              {typeof details?.power === "number" ? details.power : "-"}
+            </div>
+          );
+        },
+      },
+      {
+        id: "accuracy",
+        header: () => <div className="text-right">Accuracy</div>,
+        cell: ({ row }) => {
+          const details = detailsByName.get(row.original.name);
+          return (
+            <div className="text-right font-mono text-sm">
+              {typeof details?.accuracy === "number" ? `${details.accuracy}%` : "-"}
+            </div>
+          );
+        },
+      },
+    ],
+    [detailsByName],
+  );
 
   return (
     <main className="reveal mx-auto max-w-4xl px-6 pt-12">
@@ -127,63 +189,7 @@ function RouteComponent() {
 
         <CardContent className="relative border-t pt-6">
           <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
-                <TableRow>
-                  <TableHead className="border-b border-border">Move</TableHead>
-                  <TableHead className="border-b border-border">Type</TableHead>
-                  <TableHead className="border-b border-border text-right">Power</TableHead>
-                  <TableHead className="border-b border-border text-right">Accuracy</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4}>No moves found</TableCell>
-                  </TableRow>
-                ) : (
-                  visibleRows.map((move) => {
-                    const details = detailsByName.get(move.name);
-                    const displayName = move.name.replaceAll("-", " ").toUpperCase();
-                    return (
-                      <TableRow
-                        key={move.name}
-                        tabIndex={0}
-                        className="cursor-pointer"
-                        onClick={() => toMovePage(move.name)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            toMovePage(move.name);
-                          }
-                        }}
-                        aria-label={`View move details for ${move.name}`}
-                      >
-                        <TableCell>
-                          <div className="text-sm font-medium">{displayName}</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="bg-muted/30 capitalize">
-                            {details?.type ?? "Loading"}
-                          </Badge>
-                          {details?.damageClass ? (
-                            <Badge variant="secondary" className="ml-2 capitalize">
-                              {details.damageClass}
-                            </Badge>
-                          ) : null}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {typeof details?.power === "number" ? details.power : "-"}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {typeof details?.accuracy === "number" ? `${details.accuracy}%` : "-"}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            <MoveTable rows={visibleRows} columns={columns} onRowActivate={toMovePage} />
           </section>
 
           {isFetching && (
@@ -245,3 +251,64 @@ function RouteComponent() {
     </main>
   );
 }
+
+type MoveTableProps = {
+  rows: MoveRow[];
+  columns: ColumnDef<MoveRow>[];
+  onRowActivate: (name: string) => void;
+};
+
+const MoveTable = React.memo(function MoveTable({ rows, columns, onRowActivate }: MoveTableProps) {
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <Table>
+      <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <TableHead key={header.id} className="border-b border-border">
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={table.getAllColumns().length}>No moves found</TableCell>
+          </TableRow>
+        ) : (
+          table.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              tabIndex={0}
+              className="cursor-pointer"
+              onClick={() => onRowActivate(row.original.name)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onRowActivate(row.original.name);
+                }
+              }}
+              aria-label={`View move details for ${row.original.name}`}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+});

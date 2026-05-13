@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useDebounceCallback } from "usehooks-ts";
 import { getAllItemsQuery, getItemQuery } from "@/api/items";
 import ErrorNotification from "@/components/ErrorNotification";
@@ -29,6 +30,17 @@ export const Route = createFileRoute("/items/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getAllItemsQuery(5000, 0)),
   component: RouteComponent,
 });
+
+type ItemRow = {
+  name: string;
+  url: string;
+};
+
+type ItemDetails = {
+  sprite: string | null;
+  category: string;
+  cost: number;
+};
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
@@ -65,7 +77,7 @@ function RouteComponent() {
   });
 
   const detailsByName = React.useMemo(() => {
-    const map = new Map<string, { sprite: string | null; category: string; cost: number }>();
+    const map = new Map<string, ItemDetails>();
     visibleRows.forEach((item, index) => {
       const detail = detailQueries[index]?.data;
       if (!detail) return;
@@ -87,6 +99,55 @@ function RouteComponent() {
       params: { itemId: name },
     });
   };
+
+  const columns: ColumnDef<ItemRow>[] = React.useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Item",
+        cell: ({ row }) => {
+          const details = detailsByName.get(row.original.name);
+          const displayName = row.original.name.replaceAll("-", " ").toUpperCase();
+          return (
+            <div className="flex items-center gap-3">
+              <Avatar>
+                {details?.sprite ? (
+                  <AvatarImage src={details.sprite} alt={`${row.original.name} sprite`} />
+                ) : null}
+                <AvatarFallback>{row.original.name.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="text-sm font-medium">{displayName}</div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "category",
+        header: "Category",
+        cell: ({ row }) => {
+          const details = detailsByName.get(row.original.name);
+          return (
+            <Badge variant="outline" className="bg-muted/30">
+              {details?.category ?? "Loading"}
+            </Badge>
+          );
+        },
+      },
+      {
+        id: "cost",
+        header: () => <div className="text-right">Cost</div>,
+        cell: ({ row }) => {
+          const details = detailsByName.get(row.original.name);
+          return (
+            <div className="text-right font-mono text-sm">
+              {typeof details?.cost === "number" ? details.cost.toLocaleString() : "..."}
+            </div>
+          );
+        },
+      },
+    ],
+    [detailsByName],
+  );
 
   return (
     <main className="reveal mx-auto max-w-4xl px-6 pt-12">
@@ -117,64 +178,7 @@ function RouteComponent() {
 
         <CardContent className="relative border-t pt-6">
           <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
-                <TableRow>
-                  <TableHead className="border-b border-border">Item</TableHead>
-                  <TableHead className="border-b border-border">Category</TableHead>
-                  <TableHead className="border-b border-border text-right">Cost</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3}>No items found</TableCell>
-                  </TableRow>
-                ) : (
-                  visibleRows.map((item) => {
-                    const details = detailsByName.get(item.name);
-                    const displayName = item.name.replaceAll("-", " ").toUpperCase();
-                    return (
-                      <TableRow
-                        key={item.name}
-                        tabIndex={0}
-                        className="cursor-pointer"
-                        onClick={() => toItemPage(item.name)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            toItemPage(item.name);
-                          }
-                        }}
-                        aria-label={`View item details for ${item.name}`}
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              {details?.sprite ? (
-                                <AvatarImage src={details.sprite} alt={`${item.name} sprite`} />
-                              ) : null}
-                              <AvatarFallback>{item.name.charAt(0).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <div className="text-sm font-medium">{displayName}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="bg-muted/30">
-                            {details?.category ?? "Loading"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm">
-                          {typeof details?.cost === "number"
-                            ? details.cost.toLocaleString()
-                            : "..."}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            <ItemsTable rows={visibleRows} columns={columns} onRowActivate={toItemPage} />
           </section>
 
           {isFetching && (
@@ -236,3 +240,68 @@ function RouteComponent() {
     </main>
   );
 }
+
+type ItemsTableProps = {
+  rows: ItemRow[];
+  columns: ColumnDef<ItemRow>[];
+  onRowActivate: (name: string) => void;
+};
+
+const ItemsTable = React.memo(function ItemsTable({
+  rows,
+  columns,
+  onRowActivate,
+}: ItemsTableProps) {
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <Table>
+      <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <TableHead key={header.id} className="border-b border-border">
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={table.getAllColumns().length}>No items found</TableCell>
+          </TableRow>
+        ) : (
+          table.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              tabIndex={0}
+              className="cursor-pointer"
+              onClick={() => onRowActivate(row.original.name)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onRowActivate(row.original.name);
+                }
+              }}
+              aria-label={`View item details for ${row.original.name}`}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+});
