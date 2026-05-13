@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import React from "react";
@@ -39,9 +39,11 @@ function DashboardComponent() {
   const rowsPerPageId = React.useId();
   const debounced = useDebounceCallback(setFilter, 500);
 
-  const { data, refetch, isFetching } = useSuspenseQuery(
-    getAllPokemonQuery(pageSize, pageIndex * pageSize),
-  );
+  const { data, refetch, isFetching, error } = useQuery({
+    ...getAllPokemonQuery(pageSize, pageIndex * pageSize),
+    // !INFO: Preserve the last page while the next page is loading to avoid table flicker
+    placeholderData: keepPreviousData,
+  });
 
   const filteredResults = React.useMemo(() => {
     if (!filter) return data?.results ?? [];
@@ -85,12 +87,7 @@ function DashboardComponent() {
     [],
   );
 
-  const table = useReactTable({
-    data: filteredResults,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
+  if (error) return <ErrorNotification error={error} />;
   if (!data) return <ErrorNotification error={new Error("No data found")} />;
 
   return (
@@ -118,48 +115,16 @@ function DashboardComponent() {
           </div>
         </CardHeader>
 
-        <CardContent className="border-t pt-6">
+        <CardContent className="relative border-t pt-6">
           <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className="border-b border-border">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={table.getAllColumns().length}>No data</TableCell>
-                  </TableRow>
-                ) : (
-                  table.getRowModel().rows.map((row) => {
-                    return (
-                      <TableRow key={row.id}>
-                        {row.getVisibleCells().map((cell) => {
-                          return (
-                            <TableCell
-                              key={cell.id}
-                              className={cell.column.id === "actions" ? "text-right" : undefined}
-                            >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            <PokemonTable rows={filteredResults} columns={columns} />
           </section>
+          {isFetching && (
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-1 animate-pulse rounded bg-primary/50"
+              aria-hidden="true"
+            />
+          )}
           <div className="mt-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -182,7 +147,6 @@ function DashboardComponent() {
               </Button>
               <Badge variant="outline" className="ml-1 sm:ml-3">
                 Page {pageIndex + 1} of {Math.ceil(data.count / pageSize)}
-                {isFetching ? " (loading...)" : ""}
               </Badge>
             </div>
 
@@ -213,5 +177,60 @@ function DashboardComponent() {
     </main>
   );
 }
+
+type PokemonTableProps = {
+  rows: PokemonRefDto[];
+  columns: ColumnDef<PokemonRefDto>[];
+};
+
+const PokemonTable = React.memo(function PokemonTable({ rows, columns }: PokemonTableProps) {
+  const table = useReactTable({
+    data: rows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <Table>
+      <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <TableHead key={header.id} className="border-b border-border">
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={table.getAllColumns().length}>No data</TableCell>
+          </TableRow>
+        ) : (
+          table.getRowModel().rows.map((row) => {
+            return (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <TableCell
+                      key={cell.id}
+                      className={cell.column.id === "actions" ? "text-right" : undefined}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            );
+          })
+        )}
+      </TableBody>
+    </Table>
+  );
+});
 
 export default DashboardComponent;
