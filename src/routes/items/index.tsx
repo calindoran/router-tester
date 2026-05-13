@@ -1,30 +1,17 @@
 import * as React from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { type ColumnDef } from "@tanstack/react-table";
 import { useDebounceCallback } from "usehooks-ts";
 import { getAllItemsQuery, getItemQuery } from "@/api/items";
+import GenericDataTable from "@/components/GenericDataTable";
+import TablePagination from "@/components/TablePagination";
 import ErrorNotification from "@/components/ErrorNotification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export const Route = createFileRoute("/items/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getAllItemsQuery(5000, 0)),
@@ -47,7 +34,6 @@ function RouteComponent() {
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(20);
   const [filter, setFilter] = React.useState("");
-  const rowsPerPageId = React.useId();
   const debounced = useDebounceCallback(setFilter, 350);
 
   const { data, error, isFetching, refetch } = useQuery({
@@ -178,130 +164,29 @@ function RouteComponent() {
 
         <CardContent className="relative border-t pt-6">
           <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
-            <ItemsTable rows={visibleRows} columns={columns} onRowActivate={toItemPage} />
+            <GenericDataTable
+              rows={visibleRows}
+              columns={columns}
+              emptyMessage="No items found"
+              onRowActivate={(row) => toItemPage(row.name)}
+              getRowAriaLabel={(row) => `View item details for ${row.name}`}
+            />
           </section>
-
           {isFetching && (
             <div
               className="pointer-events-none absolute inset-x-0 top-0 h-1 animate-pulse rounded bg-primary/50"
               aria-hidden="true"
             />
           )}
-
-          <div className="mt-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                disabled={pageIndex === 0}
-                variant="outline"
-                size="sm"
-              >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
-                disabled={safePageIndex + 1 >= pageCount}
-                variant="outline"
-                size="sm"
-              >
-                Next
-              </Button>
-              <Badge variant="outline" className="ml-1 sm:ml-3">
-                Page {safePageIndex + 1} of {pageCount}
-              </Badge>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-muted-foreground" htmlFor={rowsPerPageId}>
-                Rows:
-              </label>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(value) => {
-                  setPageSize(Number(value));
-                  setPageIndex(0);
-                }}
-              >
-                <SelectTrigger id={rowsPerPageId} className="w-20">
-                  <SelectValue placeholder="Rows" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <TablePagination
+            pageIndex={safePageIndex}
+            pageCount={pageCount}
+            pageSize={pageSize}
+            onPageIndexChange={setPageIndex}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
     </main>
   );
 }
-
-type ItemsTableProps = {
-  rows: ItemRow[];
-  columns: ColumnDef<ItemRow>[];
-  onRowActivate: (name: string) => void;
-};
-
-const ItemsTable = React.memo(function ItemsTable({
-  rows,
-  columns,
-  onRowActivate,
-}: ItemsTableProps) {
-  const table = useReactTable({
-    data: rows,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  return (
-    <Table>
-      <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead key={header.id} className="border-b border-border">
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {table.getRowModel().rows.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={table.getAllColumns().length}>No items found</TableCell>
-          </TableRow>
-        ) : (
-          table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              tabIndex={0}
-              className="cursor-pointer"
-              onClick={() => onRowActivate(row.original.name)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onRowActivate(row.original.name);
-                }
-              }}
-              aria-label={`View item details for ${row.original.name}`}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-  );
-});

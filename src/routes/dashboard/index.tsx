@@ -1,31 +1,17 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { type ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import { useDebounceCallback } from "usehooks-ts";
 import { getAllPokemonQuery, type PokemonRefDto } from "@/api/pokemon";
+import GenericDataTable from "@/components/GenericDataTable";
+import TablePagination from "@/components/TablePagination";
 import ErrorNotification from "@/components/ErrorNotification";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export const Route = createFileRoute("/dashboard/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getAllPokemonQuery(20, 0)),
@@ -36,7 +22,6 @@ function DashboardComponent() {
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(20);
   const [filter, setFilter] = React.useState("");
-  const rowsPerPageId = React.useId();
   const debounced = useDebounceCallback(setFilter, 500);
 
   const { data, refetch, isFetching, error } = useQuery({
@@ -49,6 +34,8 @@ function DashboardComponent() {
     if (!filter) return data?.results ?? [];
     return (data?.results ?? []).filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
   }, [data, filter]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredResults.length / pageSize));
 
   const columns: ColumnDef<PokemonRefDto>[] = React.useMemo(
     () => [
@@ -117,7 +104,12 @@ function DashboardComponent() {
 
         <CardContent className="relative border-t pt-6">
           <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
-            <PokemonTable rows={filteredResults} columns={columns} />
+            <GenericDataTable
+              rows={filteredResults}
+              columns={columns}
+              emptyMessage="No data"
+              getCellClassName={(cell) => (cell.column.id === "actions" ? "text-right" : undefined)}
+            />
           </section>
           {isFetching && (
             <div
@@ -125,112 +117,17 @@ function DashboardComponent() {
               aria-hidden="true"
             />
           )}
-          <div className="mt-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                disabled={pageIndex === 0}
-                variant="outline"
-                size="sm"
-              >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setPageIndex((p) => p + 1)}
-                disabled={pageIndex + 1 >= Math.ceil(data.count / pageSize)}
-                variant="outline"
-                size="sm"
-              >
-                Next
-              </Button>
-              <Badge variant="outline" className="ml-1 sm:ml-3">
-                Page {pageIndex + 1} of {Math.ceil(data.count / pageSize)}
-              </Badge>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-muted-foreground" htmlFor={rowsPerPageId}>
-                Rows:
-              </label>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(value) => {
-                  setPageSize(Number(value));
-                  setPageIndex(0);
-                }}
-              >
-                <SelectTrigger id={rowsPerPageId} className="w-20">
-                  <SelectValue placeholder="Rows" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <TablePagination
+            pageIndex={pageIndex}
+            pageCount={pageCount}
+            pageSize={pageSize}
+            onPageIndexChange={setPageIndex}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
     </main>
   );
 }
-
-type PokemonTableProps = {
-  rows: PokemonRefDto[];
-  columns: ColumnDef<PokemonRefDto>[];
-};
-
-const PokemonTable = React.memo(function PokemonTable({ rows, columns }: PokemonTableProps) {
-  const table = useReactTable({
-    data: rows,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  return (
-    <Table>
-      <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead key={header.id} className="border-b border-border">
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {table.getRowModel().rows.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={table.getAllColumns().length}>No data</TableCell>
-          </TableRow>
-        ) : (
-          table.getRowModel().rows.map((row) => {
-            return (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => {
-                  return (
-                    <TableCell
-                      key={cell.id}
-                      className={cell.column.id === "actions" ? "text-right" : undefined}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })
-        )}
-      </TableBody>
-    </Table>
-  );
-});
 
 export default DashboardComponent;

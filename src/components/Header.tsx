@@ -37,18 +37,18 @@ export default function Header({ navigate }: { navigate: UseNavigateResult<"/"> 
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/generations" data-label="Generations">
-                <span>Game Generations</span>
-              </Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild>
               <Link to="/items" data-label="Items">
                 <span>Items</span>
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/moves" search={{ page: 0, size: 20, q: "" }} data-label="Moves">
+              <Link to="/moves" data-label="Moves">
                 <span>Moves</span>
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/generations" data-label="Generations">
+                <span>Game Generations</span>
               </Link>
             </Button>
           </div>
