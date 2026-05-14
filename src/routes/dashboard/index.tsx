@@ -1,17 +1,17 @@
+import { getAllPokemonQuery, type PokemonRefDto } from "@/api/pokemon";
+import ErrorNotification from "@/components/ErrorNotification";
+import GenericDataTable from "@/components/GenericDataTable";
+import TablePagination from "@/components/TablePagination";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { type ColumnDef } from "@tanstack/react-table";
-import React from "react";
 import { ArrowRight } from "lucide-react";
+import React from "react";
 import { useDebounceCallback } from "usehooks-ts";
-import { getAllPokemonQuery, type PokemonRefDto } from "@/api/pokemon";
-import GenericDataTable from "@/components/GenericDataTable";
-import TablePagination from "@/components/TablePagination";
-import ErrorNotification from "@/components/ErrorNotification";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const Route = createFileRoute("/dashboard/")({
   loader: (options) => options.context.queryClient.ensureQueryData(getAllPokemonQuery(20, 0)),
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function DashboardComponent() {
+  const navigate = Route.useNavigate();
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(20);
   const [filter, setFilter] = React.useState("");
@@ -26,16 +27,26 @@ function DashboardComponent() {
 
   const { data, refetch, isFetching, error } = useQuery({
     ...getAllPokemonQuery(pageSize, pageIndex * pageSize),
-    // !INFO: Preserve the last page while the next page is loading to avoid table flicker
     placeholderData: keepPreviousData,
   });
 
   const filteredResults = React.useMemo(() => {
     if (!filter) return data?.results ?? [];
-    return (data?.results ?? []).filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
+    if (!data?.results) return [];
+    return data.results.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
   }, [data, filter]);
 
-  const pageCount = Math.max(1, Math.ceil(filteredResults.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil((data?.count ?? 0) / pageSize));
+
+  if (error) return <ErrorNotification error={error} />;
+  if (!data) return <ErrorNotification error={new Error("No data found")} />;
+
+  const toDashboardPage = (name: string) => {
+    navigate({
+      to: "/dashboard/$id",
+      params: { id: name },
+    });
+  };
 
   const columns: ColumnDef<PokemonRefDto>[] = React.useMemo(
     () => [
@@ -44,12 +55,14 @@ function DashboardComponent() {
         header: "Name",
         cell: (row) => {
           if (!row.getValue()) return null;
+          const rowValue = row.getValue<string>();
+          const name = typeof rowValue === "string" ? rowValue : "";
           return (
             <div className="flex items-center gap-3">
               <Avatar>
-                <AvatarFallback>{String(row.getValue()).charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
-              <div className="text-sm font-medium">{String(row.getValue()).toUpperCase()}</div>
+              <div className="text-sm font-medium">{name.toUpperCase()}</div>
             </div>
           );
         },
@@ -59,23 +72,24 @@ function DashboardComponent() {
         accessorKey: "name",
         header: () => <div className="text-right">Actions</div>,
         cell: (row) => {
-          const href = `/dashboard/${row.getValue()}`;
+          const rowValue = row.getValue<string>();
+          const name = typeof rowValue === "string" ? rowValue : "";
+          const href = `/dashboard/${name}`;
           return (
-            <Button asChild size="sm" variant="outline" className="ml-auto">
-              <Link to={href}>
-                <span>View Details</span>
-                <ArrowRight />
-              </Link>
-            </Button>
+            <div className="text-right">
+              <Button asChild size="sm" variant="outline" className="ml-auto">
+                <Link to={href}>
+                  <span>View Details</span>
+                  <ArrowRight />
+                </Link>
+              </Button>
+            </div>
           );
         },
       },
     ],
     [],
   );
-
-  if (error) return <ErrorNotification error={error} />;
-  if (!data) return <ErrorNotification error={new Error("No data found")} />;
 
   return (
     <main className="reveal mx-auto max-w-4xl px-6 pt-12">
@@ -85,7 +99,7 @@ function DashboardComponent() {
             <CardTitle className="text-2xl font-extrabold tracking-tight md:text-3xl">
               Pokédex
             </CardTitle>
-            <CardDescription className="mt-1 text-sm">Browse Pokémon (sample list)</CardDescription>
+            <CardDescription className="mt-1 text-sm">Browse Pokémon and view their details.</CardDescription>
           </div>
           <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:flex-nowrap">
             <Input
@@ -103,20 +117,14 @@ function DashboardComponent() {
         </CardHeader>
 
         <CardContent className="relative border-t pt-6">
-          <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
-            <GenericDataTable
-              rows={filteredResults}
-              columns={columns}
-              emptyMessage="No data"
-              getCellClassName={(cell) => (cell.column.id === "actions" ? "text-right" : undefined)}
-            />
-          </section>
-          {isFetching && (
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-1 animate-pulse rounded bg-primary/50"
-              aria-hidden="true"
-            />
-          )}
+          <GenericDataTable
+            rows={filteredResults}
+            columns={columns}
+            emptyMessage="No data"
+            onRowActivate={(row) => toDashboardPage(row.name)}
+            getRowAriaLabel={(row) => `View Pokémon details for ${row.name}`}
+            isFetching={isFetching}
+          />
           <TablePagination
             pageIndex={pageIndex}
             pageCount={pageCount}

@@ -1,20 +1,19 @@
-import * as React from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { type ColumnDef } from "@tanstack/react-table";
-import { useDebounceCallback } from "usehooks-ts";
 import { getAllItemsQuery, getItemQuery } from "@/api/items";
-import GenericDataTable from "@/components/GenericDataTable";
-import TablePagination from "@/components/TablePagination";
 import ErrorNotification from "@/components/ErrorNotification";
+import GenericDataTable from "@/components/GenericDataTable";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { type ColumnDef } from "@tanstack/react-table";
+import * as React from "react";
+import { useDebounceCallback } from "usehooks-ts";
 
 export const Route = createFileRoute("/items/")({
-  loader: (options) => options.context.queryClient.ensureQueryData(getAllItemsQuery(5000, 0)),
+  loader: (options) => options.context.queryClient.ensureQueryData(getAllItemsQuery(20, 0)),
   component: RouteComponent,
 });
 
@@ -31,32 +30,21 @@ type ItemDetails = {
 
 function RouteComponent() {
   const navigate = Route.useNavigate();
-  const [pageIndex, setPageIndex] = React.useState(0);
-  const [pageSize, setPageSize] = React.useState(20);
   const [filter, setFilter] = React.useState("");
   const debounced = useDebounceCallback(setFilter, 350);
-
   const { data, error, isFetching, refetch } = useQuery({
-    ...getAllItemsQuery(5000, 0),
+    ...getAllItemsQuery(20, 0),
   });
 
   const filteredRows = React.useMemo(() => {
     if (!data?.results) return [];
     if (!filter) return data.results;
-    const needle = filter.toLowerCase();
-    return data.results.filter((item) => item.name.toLowerCase().includes(needle));
+    const filterItem = filter.toLowerCase();
+    return data.results.filter((item) => item.name.toLowerCase().includes(filterItem));
   }, [data?.results, filter]);
 
-  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
-  const safePageIndex = Math.min(pageIndex, pageCount - 1);
-
-  const visibleRows = React.useMemo(() => {
-    const start = safePageIndex * pageSize;
-    return filteredRows.slice(start, start + pageSize);
-  }, [filteredRows, pageSize, safePageIndex]);
-
   const detailQueries = useQueries({
-    queries: visibleRows.map((item) => ({
+    queries: filteredRows.map((item) => ({
       ...getItemQuery(item.name),
       staleTime: 1000 * 60 * 5,
     })),
@@ -64,7 +52,7 @@ function RouteComponent() {
 
   const detailsByName = React.useMemo(() => {
     const map = new Map<string, ItemDetails>();
-    visibleRows.forEach((item, index) => {
+    filteredRows.forEach((item, index) => {
       const detail = detailQueries[index]?.data;
       if (!detail) return;
       map.set(item.name, {
@@ -74,7 +62,7 @@ function RouteComponent() {
       });
     });
     return map;
-  }, [visibleRows, detailQueries]);
+  }, [filteredRows, detailQueries]);
 
   if (error) return <ErrorNotification error={error} />;
   if (!data) return <ErrorNotification error={new Error("No item data found")} />;
@@ -163,27 +151,13 @@ function RouteComponent() {
         </CardHeader>
 
         <CardContent className="relative border-t pt-6">
-          <section className="mt-2 max-h-120 overflow-auto rounded-md border border-border/60">
-            <GenericDataTable
-              rows={visibleRows}
-              columns={columns}
-              emptyMessage="No items found"
-              onRowActivate={(row) => toItemPage(row.name)}
-              getRowAriaLabel={(row) => `View item details for ${row.name}`}
-            />
-          </section>
-          {isFetching && (
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-1 animate-pulse rounded bg-primary/50"
-              aria-hidden="true"
-            />
-          )}
-          <TablePagination
-            pageIndex={safePageIndex}
-            pageCount={pageCount}
-            pageSize={pageSize}
-            onPageIndexChange={setPageIndex}
-            onPageSizeChange={setPageSize}
+          <GenericDataTable
+            rows={filteredRows}
+            columns={columns}
+            emptyMessage="No items found"
+            onRowActivate={(row) => toItemPage(row.name)}
+            getRowAriaLabel={(row) => `View item details for ${row.name}`}
+            isFetching={isFetching}
           />
         </CardContent>
       </Card>

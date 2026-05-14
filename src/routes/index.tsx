@@ -1,8 +1,7 @@
 import { Spinner } from "@/components/Spinner";
+import Dashboard from "@/routes/dashboard";
 import { createFileRoute } from "@tanstack/react-router";
 import React from "react";
-
-const DashboardLazy = React.lazy(() => import("@/routes/dashboard"));
 
 export const Route = createFileRoute("/")({
   component: App,
@@ -17,7 +16,7 @@ function App() {
         </div>
       }
     >
-      <DashboardLazy />
+      <Dashboard />
     </React.Suspense>
   );
 }
