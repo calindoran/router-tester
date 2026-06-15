@@ -25,29 +25,6 @@ function DashboardComponent() {
   const [filter, setFilter] = React.useState("");
   const debounced = useDebounceCallback(setFilter, 500);
 
-  const { data, refetch, isFetching, error } = useQuery({
-    ...getAllPokemonQuery(pageSize, pageIndex * pageSize),
-    placeholderData: keepPreviousData,
-  });
-
-  const filteredResults = React.useMemo(() => {
-    if (!filter) return data?.results ?? [];
-    if (!data?.results) return [];
-    return data.results.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
-  }, [data, filter]);
-
-  const pageCount = Math.max(1, Math.ceil((data?.count ?? 0) / pageSize));
-
-  if (error) return <ErrorNotification error={error} />;
-  if (!data) return <ErrorNotification error={new Error("No data found")} />;
-
-  const toDashboardPage = (name: string) => {
-    navigate({
-      to: "/dashboard/$id",
-      params: { id: name },
-    });
-  };
-
   const columns: ColumnDef<PokemonRefDto>[] = React.useMemo(
     () => [
       {
@@ -90,6 +67,29 @@ function DashboardComponent() {
     ],
     [],
   );
+
+  const { data, refetch, isFetching, error } = useQuery({
+    ...getAllPokemonQuery(pageSize, pageIndex * pageSize),
+    placeholderData: keepPreviousData,
+  });
+
+  const filteredResults = React.useMemo(() => {
+    if (!filter) return data?.results ?? [];
+    if (!data?.results) return [];
+    return data.results.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
+  }, [data, filter]);
+
+  const pageCount = Math.max(1, Math.ceil((data?.count ?? 0) / pageSize));
+
+  if (error) return <ErrorNotification error={error} />;
+  if (!data) return <ErrorNotification error={new Error("No data found")} />;
+
+  const toDashboardPage = (name: string) => {
+    navigate({
+      to: "/dashboard/$id",
+      params: { id: name },
+    });
+  };
 
   return (
     <main className="reveal mx-auto max-w-4xl px-6 pt-12">
