@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { vi, test, expect } from "vitest";
+import { vi, test, expect } from "vite-plus/test";
 
 // Mock auth hook so Header can be tested in isolation
 const logoutMock = vi.fn(() => Promise.resolve());

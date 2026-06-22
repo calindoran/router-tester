@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { render, screen, waitFor } from "@testing-library/react";
-import { test, expect } from "vitest";
+import { test, expect } from "vite-plus/test";
 import { AuthProvider, useAuth } from "../auth/AuthProvider";
 
 function ShowUser() {

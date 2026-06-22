@@ -99,7 +99,9 @@ function DashboardComponent() {
             <CardTitle className="text-2xl font-extrabold tracking-tight md:text-3xl">
               Pokédex
             </CardTitle>
-            <CardDescription className="mt-1 text-sm">Browse Pokémon and view their details.</CardDescription>
+            <CardDescription className="mt-1 text-sm">
+              Browse Pokémon and view their details.
+            </CardDescription>
           </div>
           <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:flex-nowrap">
             <Input
